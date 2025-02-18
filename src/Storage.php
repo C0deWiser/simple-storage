@@ -192,6 +192,6 @@ class Storage implements StorageContract
     {
         return $this->singular
             ? $this->single()?->toArray()
-            : $this->files()->toArray();
+            : $this->files()->latest()->toArray();
     }
 }
