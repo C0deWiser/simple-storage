@@ -1,0 +1,81 @@
+<?php
+
+namespace Tests;
+
+use Codewiser\Storage\Pool;
+use Codewiser\Storage\Storage;
+use Illuminate\Filesystem\FilesystemAdapter;
+use League\Flysystem\Filesystem;
+use League\Flysystem\Local\LocalFilesystemAdapter;
+use PHPUnit\Framework\TestCase;
+
+class StorageTest extends TestCase
+{
+    protected FilesystemAdapter $fs;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $root = __DIR__.'/../storage';
+        $adapter = new LocalFilesystemAdapter($root);
+        $filesystem = new Filesystem($adapter);
+        $this->fs = new FilesystemAdapter($filesystem, $adapter, ['root' => $root]);
+    }
+
+    public function testOne()
+    {
+        $model = new Model();
+
+        $pool = Pool::make()->addBucket(Storage::make($model, $this->fs)->mute()->singular());
+
+        $pool->getBucket()->upload(__DIR__ . '/test.png');
+        $pool->getBucket()->upload(__DIR__ . '/test2.png');
+
+        $this->assertEquals(1, $pool->getBucket()->files()->count());
+
+        $pool->getBucket()->flush();
+
+        $this->assertEquals(0, $pool->getBucket()->files()->count());
+    }
+
+    public function testMany()
+    {
+        $model = new Model();
+
+        $pool = Pool::make()->addBucket(Storage::make($model, $this->fs)->mute());
+
+        $pool->getBucket()->upload(__DIR__ . '/test.png');
+        $pool->getBucket()->upload(__DIR__ . '/test2.png');
+
+        $this->assertEquals(2, $pool->getBucket()->files()->count());
+
+        $pool->getBucket()->flush();
+
+        $this->assertEquals(0, $pool->getBucket()->files()->count());
+    }
+
+    public function testPool()
+    {
+        $model = new Model();
+
+        $pool = Pool::make()
+            ->addBucket(Storage::make($model, $this->fs)->mute()->singular())
+            ->addBucket(Storage::make($model, $this->fs, 'docs')->mute());
+
+        $pool->getBucket()->upload(__DIR__ . '/test.png');
+        $pool->getBucket('docs')->upload(__DIR__ . '/test.png');
+        $pool->getBucket('docs')->upload(__DIR__ . '/test2.png');
+
+        $this->assertEquals(1, $pool->getBucket()->files()->count());
+        $this->assertEquals(2, $pool->getBucket('docs')->files()->count());
+
+        dump($pool->getBucket('docs')->single()->toArray());
+
+        $pool->getBucket()->flush();
+        $pool->getBucket('docs')->flush();
+
+        $this->assertEquals(0, $pool->getBucket()->files()->count());
+        $this->assertEquals(0, $pool->getBucket('docs')->files()->count());
+    }
+}
