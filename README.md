@@ -11,12 +11,11 @@ In the example below the model will keep files in `local` disk at `post/{id}`
 path.
 
 ```php
-use Codewiser\Storage\Attachmentable;
 use Codewiser\Storage\Storage;
 use Codewiser\Storage\StorageContract;
 use Illuminate\Database\Eloquent\Model;
 
-class Post extends Model implements Attachmentable
+class Post extends Model
 {
     public function storage(): StorageContract
     {
@@ -99,12 +98,11 @@ Sometimes we need the model to have only one file. We may create such a
 storage:
 
 ```php
-use Codewiser\Storage\Attachmentable;
 use Codewiser\Storage\Storage;
 use Codewiser\Storage\StorageContract;
 use Illuminate\Database\Eloquent\Model;
 
-class Post extends Model implements Attachmentable
+class Post extends Model
 {
     public function storage(): StorageContract
     {
@@ -121,14 +119,13 @@ If you upload next file to a storage, all previous files will be removed.
 We may combine few storages in a poll:
 
 ```php
-use Codewiser\Storage\Attachmentable;
 use Codewiser\Storage\Pool;
 use Codewiser\Storage\Storage;
 use Codewiser\Storage\StorageContract;
 use Illuminate\Database\Eloquent\Model;
 use BackedEnum;
 
-class Post extends Model implements Attachmentable
+class Post extends Model
 {
     public function storage(string|BackedEnum $bucket): StorageContract
     {
@@ -157,14 +154,13 @@ To get the first (or single) file from a storage use `single` method.
 It is allowed to have one default storage in a pool:
 
 ```php
-use Codewiser\Storage\Attachmentable;
 use Codewiser\Storage\Pool;
 use Codewiser\Storage\Storage;
 use Codewiser\Storage\StorageContract;
 use Illuminate\Database\Eloquent\Model;
 use BackedEnum;
 
-class Post extends Model implements Attachmentable
+class Post extends Model
 {
     public function storage(string|BackedEnum $bucket = null): StorageContract
     {
