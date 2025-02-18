@@ -22,7 +22,7 @@ class Storage implements StorageContract
      * @throws \InvalidArgumentException
      * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
      */
-    public static function resolve(string $path)
+    public static function resolve(string $path): StorageContract
     {
         $path = explode('/', $path);
 
@@ -39,6 +39,12 @@ class Storage implements StorageContract
         }
 
         $model = $classname::query()->findOrFail($path[1]);
+
+        if ($model instanceof Attachmentable) {
+            return $model->storage($path[2] ?? null);
+        }
+
+        throw new \InvalidArgumentException(__('Model not Attachmentable'));
     }
 
     public static function make(
