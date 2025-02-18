@@ -2,16 +2,12 @@
 
 namespace Codewiser\Storage;
 
-use Illuminate\Contracts\Filesystem\Filesystem;
-use Illuminate\Mail\Attachment;
-use Illuminate\Support\Collection;
-
 /**
- * @extends Collection<int,File>
+ * @extends \Illuminate\Support\Collection<int,File>
  */
-class FileCollection extends Collection
+class FileCollection extends \Illuminate\Support\Collection
 {
-    public static function hydrate(Filesystem $disk, array $items = []): static
+    public static function hydrate(\Illuminate\Contracts\Filesystem\Filesystem $disk, array $items = []): static
     {
         return (new static($items))
             ->map(fn($file) => is_string($file)
@@ -38,6 +34,16 @@ class FileCollection extends Collection
         );
     }
 
+    /**
+     * Get file by its filename.
+     */
+    public function one(string $filename): ?File
+    {
+        return $this->first(
+            fn(File $file) => $file->filename() == $filename
+        );
+    }
+
     public function latest(): static
     {
         return $this
@@ -50,7 +56,7 @@ class FileCollection extends Collection
     }
 
     /**
-     * @return array<Attachment>
+     * @return array<int,\Illuminate\Mail\Attachment>
      */
     public function toMailAttachments(): array
     {

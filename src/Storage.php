@@ -2,16 +2,9 @@
 
 namespace Codewiser\Storage;
 
-use BackedEnum;
-use Illuminate\Contracts\Filesystem\Filesystem;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\Relation;
-use Illuminate\Http\UploadedFile;
-use InvalidArgumentException;
-
 class Storage implements StorageContract
 {
-    readonly public Filesystem $disk;
+    readonly public \Illuminate\Contracts\Filesystem\Filesystem $disk;
 
     /**
      * Mount point (relative to the disk).
@@ -20,26 +13,47 @@ class Storage implements StorageContract
      */
     protected string $mount;
 
-    protected bool $singular = false;
-
     /**
      * Mute events.
      */
     protected bool $mute = false;
 
-    public static function make(Model $owner, Filesystem|string $disk, null|string|BackedEnum $bucket = null): static
+    /**
+     * @throws \InvalidArgumentException
+     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     */
+    public static function resolve(string $path)
+    {
+        $path = explode('/', $path);
+
+        if (count($path) < 2) {
+            throw new \InvalidArgumentException("File path should be at least {model}/{id}");
+        }
+
+        $classname = \Illuminate\Database\Eloquent\Relations\Relation::getMorphedModel($path[0]);
+
+        if (!$classname && !class_exists($classname)) {
+            throw new \InvalidArgumentException(__('Unrecognized class name for ":model"', [
+                'model' => $path[0]
+            ]));
+        }
+
+        $model = $classname::query()->findOrFail($path[1]);
+    }
+
+    public static function make(
+        \Illuminate\Database\Eloquent\Model&Attachmentable $owner,
+        \Illuminate\Contracts\Filesystem\Filesystem|string $disk,
+        null|string|\BackedEnum $bucket = null
+    ): static
     {
         return new static($owner, $disk, $bucket);
     }
 
-    /**
-     * @param  Model  $owner  Storage owner.
-     * @param  Filesystem|string  $disk  Laravel disk.
-     */
     public function __construct(
-        readonly public Model $owner,
-        Filesystem|string $disk,
-        readonly protected null|string|BackedEnum $bucket = null,
+        readonly public \Illuminate\Database\Eloquent\Model&Attachmentable $owner,
+        \Illuminate\Contracts\Filesystem\Filesystem|string $disk,
+        readonly protected null|string|\BackedEnum $bucket = null,
     ) {
         if (is_string($disk)) {
             $this->disk = \Illuminate\Support\Facades\Storage::disk($disk);
@@ -56,49 +70,25 @@ class Storage implements StorageContract
 
     public function name(): ?string
     {
-        return $this->bucket instanceof BackedEnum ? $this->bucket->value : $this->bucket;
+        return $this->bucket instanceof \BackedEnum ? $this->bucket->value : $this->bucket;
     }
 
-    public function disk(): Filesystem
+    public function disk(): \Illuminate\Contracts\Filesystem\Filesystem
     {
         return $this->disk;
     }
 
-    public function owner(): Model
+    public function owner(): \Illuminate\Database\Eloquent\Model&Attachmentable
     {
         return $this->owner;
     }
 
     /**
-     * Mark that bucket holds single file.
+     * Make this bucket hold single file.
      */
-    public function singular(bool $singular = true): static
+    public function singular(): SingularContract
     {
-        $this->singular = $singular;
-
-        return $this;
-    }
-
-    /**
-     * @throws InvalidArgumentException
-     */
-    public static function mapPathToModel(string $path): Model
-    {
-        $path = explode('/', $path);
-
-        if (count($path) < 2) {
-            throw new InvalidArgumentException("File path should be {model}/{id}");
-        }
-
-        $classname = Relation::getMorphedModel($path[0]);
-
-        if (!$classname && !class_exists($classname)) {
-            throw new InvalidArgumentException(__('Unrecognized class name for ":model"', [
-                'model' => $path[0]
-            ]));
-        }
-
-        return $classname::query()->findOrFail($path[1]);
+        return Singular::make($this->owner, $this->disk, $this->bucket)->mute($this->mute);
     }
 
     /**
@@ -132,11 +122,6 @@ class Storage implements StorageContract
         return FileCollection::hydrate($this->disk, $this->disk->files($this->mount));
     }
 
-    public function single(): ?File
-    {
-        return $this->files()->first();
-    }
-
     protected function propagateNewFile($path): ?File
     {
         if ($path) {
@@ -156,18 +141,10 @@ class Storage implements StorageContract
     public function upload($content): null|File|FileCollection
     {
         if (is_array($content)) {
-            $files = FileCollection::hydrate(
+            return FileCollection::hydrate(
                 $this->disk,
                 array_map(fn($data) => $this->upload($data), $content)
             );
-
-            return $this->singular
-                ? $files->first()
-                : $files;
-        }
-
-        if ($this->singular) {
-            $this->flush();
         }
 
         $filename = null;
@@ -177,7 +154,7 @@ class Storage implements StorageContract
             $filename = $info['basename'];
         }
 
-        if ($content instanceof UploadedFile) {
+        if ($content instanceof \Illuminate\Http\UploadedFile) {
             $filename = $content->getClientOriginalName();
         }
 
@@ -188,10 +165,11 @@ class Storage implements StorageContract
         );
     }
 
-    public function toArray(): ?array
+    /**
+     * @return array
+     */
+    public function toArray()
     {
-        return $this->singular
-            ? $this->single()?->toArray()
-            : $this->files()->latest()->toArray();
+        return $this->files()->latest()->toArray();
     }
 }

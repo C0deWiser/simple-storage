@@ -2,13 +2,7 @@
 
 namespace Codewiser\Storage;
 
-use Illuminate\Contracts\Filesystem\Filesystem;
-use Illuminate\Contracts\Support\Arrayable;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Http\UploadedFile;
-use Psr\Http\Message\StreamInterface;
-
-interface StorageContract extends Arrayable
+interface StorageContract extends \Illuminate\Contracts\Support\Arrayable
 {
     /**
      * Get storage name (aka bucket).
@@ -18,12 +12,12 @@ interface StorageContract extends Arrayable
     /**
      * Get storage filesystem.
      */
-    public function disk(): Filesystem;
+    public function disk(): \Illuminate\Contracts\Filesystem\Filesystem;
 
     /**
      * Get storage owner.
      */
-    public function owner(): Model;
+    public function owner(): \Illuminate\Database\Eloquent\Model&Attachmentable;
 
     /**
      * Unlink file(s) with given keys.
@@ -35,7 +29,7 @@ interface StorageContract extends Arrayable
     /**
      * Upload a new file(s).
      *
-     * @param  StreamInterface|\Illuminate\Http\File|UploadedFile|string|resource|array  $content
+     * @param  \Psr\Http\Message\StreamInterface|\Illuminate\Http\File|\Illuminate\Http\UploadedFile|string|resource|array  $content
      */
     public function upload(mixed $content): null|File|FileCollection;
 
@@ -48,9 +42,4 @@ interface StorageContract extends Arrayable
      * Get all files.
      */
     public function files(): FileCollection;
-
-    /**
-     * Get single file.
-     */
-    public function single(): ?File;
 }

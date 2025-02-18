@@ -18,7 +18,7 @@ class FileWasStored
      */
     public function __construct(
         public File $file,
-        public Model $owner
+        public Model&Attachmentable $owner
     ) {
         //
     }

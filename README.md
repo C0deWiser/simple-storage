@@ -11,13 +11,14 @@ In the example below the model will keep files in `local` disk at `post/{id}`
 path.
 
 ```php
+use Codewiser\Storage\Attachmentable;
 use Codewiser\Storage\Storage;
 use Codewiser\Storage\StorageContract;
 use Illuminate\Database\Eloquent\Model;
 
-class Post extends Model
+class Post extends Model implements Attachmentable
 {
-    public function storage(): StorageContract
+    public function storage(string|BackedEnum $bucket = null): StorageContract
     {
         return Storage::make(owner: $this, disk: 'local');
     }
@@ -77,10 +78,6 @@ $files = $post->storage()->files();
 
 return $files->toArray();
 
-// or
-
-return $post->storage()->toArray();
-
 ```
 
 To remove all files call `flush` method on `Storage`:
@@ -103,16 +100,17 @@ Sometimes we need the model to have only one file. We may create such a
 storage:
 
 ```php
+use Codewiser\Storage\Attachmentable;
 use Codewiser\Storage\Storage;
 use Codewiser\Storage\StorageContract;
+use Codewiser\Storage\Singular;
 use Illuminate\Database\Eloquent\Model;
 
-class Post extends Model
+class Post extends Model implements Attachmentable
 {
-    public function storage(): StorageContract
+    public function storage(string|BackedEnum $bucket = null): StorageContract|Singular
     {
-        return Storage::make(owner: $this, disk: 'local')
-            ->singular();
+        return Storage::make(owner: $this, disk: 'local')->singular();
     }
 }
 ```
@@ -121,26 +119,25 @@ If you upload next file to a storage, all previous files will be removed.
 
 ## Storage Pool
 
-We may combine few storages in a poll:
+We may combine few storages in a pool:
 
 ```php
-use Codewiser\Storage\Pool;
+use Codewiser\Storage\Attachmentable;
 use Codewiser\Storage\Storage;
+use Codewiser\Storage\Singular;
 use Codewiser\Storage\StorageContract;
 use Illuminate\Database\Eloquent\Model;
 use BackedEnum;
 
-class Post extends Model
+class Post extends Model implements Attachmentable
 {
-    public function storage(string|BackedEnum $bucket): StorageContract
+    public function storage(string|BackedEnum $bucket = null): StorageContract|Singular
     {
-        return Pool::make()
-            // Keep files at post/1/cover
-            ->addBucket(Storage::make(owner: $this, disk: 'local', bucket: 'cover')
-                ->singular())
-            // Keep files at post/1/docs
-            ->addBucket(Storage::make(owner: $this, disk: 'local', bucket: 'docs'))
-            ->getBucket($bucket)
+        return match ($bucket)
+            'cover' => Storage::make($this, 'local', $bucket)->singular(),
+            'docs'  => Storage::make($this, 'local', $bucket),
+            default => throw new \InvalidArgumentException("Bucket $bucket is not supported"),
+        };
     }
 }
 ```
@@ -149,33 +146,31 @@ Then we may call to required bucket:
 
 ```php
 $docs = $post->storage('docs')->files();
-$cover = $post->storage('cover')->single();
+$cover = $post->storage('cover')->file();
 ```
 
-To get the first (or single) file from a storage use `single` method.
+To get single file from a storage use `file` method.
 
 ### Default storage
 
 It is allowed to have one default storage in a pool:
 
 ```php
-use Codewiser\Storage\Pool;
+use Codewiser\Storage\Attachmentable;
 use Codewiser\Storage\Storage;
+use Codewiser\Storage\Singular;
 use Codewiser\Storage\StorageContract;
 use Illuminate\Database\Eloquent\Model;
 use BackedEnum;
 
-class Post extends Model
+class Post extends Model implements Attachmentable
 {
-    public function storage(string|BackedEnum $bucket = null): StorageContract
+    public function storage(string|BackedEnum $bucket = null): StorageContract|Singular
     {
-        return Pool::make()
-            // Default bucket keeps files at post/1
-            ->addBucket(Storage::make(owner: $this, disk: 'local')
-                ->singular())
-            // Keep file at post/1/docs
-            ->addBucket(Storage::make(owner: $this, disk: 'local', bucket: 'docs'))
-            ->getBucket($bucket)
+        return match ($bucket)
+            'docs'  => Storage::make($this, 'local', $bucket),
+            default => Storage::make($this, 'local')->singular(),
+        };
     }
 }
 ```
@@ -183,6 +178,6 @@ class Post extends Model
 Then we may call to required bucket:
 
 ```php
-$cover = $post->storage()->single();
+$cover = $post->storage()->file();
 $docs = $post->storage('docs')->files();
 ```

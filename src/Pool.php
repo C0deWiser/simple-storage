@@ -2,15 +2,12 @@
 
 namespace Codewiser\Storage;
 
-use BackedEnum;
-use Illuminate\Support\Collection;
-
 class Pool
 {
     /**
-     * @var Collection<string,StorageContract>
+     * @var \Illuminate\Support\Collection<string,SingularContract>
      */
-    protected Collection $buckets;
+    protected \Illuminate\Support\Collection $buckets;
 
     public static function make(): static
     {
@@ -19,7 +16,7 @@ class Pool
 
     public function __construct()
     {
-        $this->buckets = collect();
+        $this->buckets = new \Illuminate\Support\Collection();
     }
 
     public function addBucket(StorageContract $bucket): static
@@ -29,16 +26,16 @@ class Pool
         return $this;
     }
 
-    public function getBucket(string|BackedEnum $name = null): StorageContract
+    public function getBucket(string|\BackedEnum $name = null): StorageContract
     {
-        if ($name instanceof BackedEnum) {
+        if ($name instanceof \BackedEnum) {
             $name = $name->value;
         }
 
         return $this->buckets->sole(fn(StorageContract $bucket) => $bucket->name() === $name);
     }
 
-    public function getBuckets(): Collection
+    public function getBuckets(): \Illuminate\Support\Collection
     {
         return $this->buckets;
     }

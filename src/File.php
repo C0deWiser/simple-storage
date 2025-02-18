@@ -2,18 +2,9 @@
 
 namespace Codewiser\Storage;
 
-use Illuminate\Contracts\Filesystem\Filesystem;
-use Illuminate\Contracts\Mail\Attachable;
-use Illuminate\Contracts\Support\Arrayable;
-use Illuminate\Contracts\Support\Responsable;
-use Illuminate\Mail\Attachment;
-use Illuminate\Support\Carbon;
-use League\Flysystem\UnableToProvideChecksum;
-use Symfony\Component\HttpFoundation\Response;
-
-class File implements Arrayable, Attachable, Responsable
+class File implements \Illuminate\Contracts\Support\Arrayable, \Illuminate\Contracts\Mail\Attachable, \Illuminate\Contracts\Support\Responsable
 {
-    public function __construct(readonly public Filesystem $disk, readonly public string $path)
+    public function __construct(readonly public \Illuminate\Contracts\Filesystem\Filesystem $disk, readonly public string $path)
     {
         //
     }
@@ -186,7 +177,7 @@ class File implements Arrayable, Attachable, Responsable
      *
      * @return string|false
      *
-     * @throws UnableToProvideChecksum
+     * @throws \League\Flysystem\UnableToProvideChecksum
      */
     public function checksum(array $options = [])
     {
@@ -219,7 +210,7 @@ class File implements Arrayable, Attachable, Responsable
             'size'          => $this->size(),
             'hash'          => $this->checksum(),
             'mime_type'     => $this->mimeType(),
-            'last_modified' => Carbon::createFromTimestamp($this->lastModified())->format('c'),
+            'last_modified' => \Illuminate\Support\Carbon::createFromTimestamp($this->lastModified())->format('c'),
         ];
     }
 
@@ -262,16 +253,16 @@ class File implements Arrayable, Attachable, Responsable
         return $this->disk->download($this->path, $name ?? $this->filename(), $headers);
     }
 
-    public function toMailAttachment(): Attachment
+    public function toMailAttachment(): \Illuminate\Mail\Attachment
     {
-        return Attachment::fromData(fn() => $this->get(), $this->filename());
+        return \Illuminate\Mail\Attachment::fromData(fn() => $this->get(), $this->filename());
     }
 
-    public function toResponse($request): Response
+    public function toResponse($request): \Symfony\Component\HttpFoundation\Response
     {
         $response = $this->response()
             ->setEtag($this->checksum())
-            ->setLastModified(Carbon::createFromTimestamp($this->lastModified()));
+            ->setLastModified(\Illuminate\Support\Carbon::createFromTimestamp($this->lastModified()));
 
         // Check and set response status...
         $response->isNotModified($request);
