@@ -25,6 +25,7 @@ class Post extends Model
 ```
 
 You may add files from `UploadedFile`, from local path or remote url.
+You may upload multiple files at once.
 
 ```php
 use Illuminate\Http\Request;
@@ -53,8 +54,8 @@ Stored file represented with such array:
 }
 ```
 
-File `path` is a relative path to a disk. Use file `path` to unlink it. You 
-may delete few files at once.
+File `path` is a relative path to a disk. Use file `path` attribute to delete 
+file. You may delete multiple files at once.
 
 ```php
 use Illuminate\Http\Request;
@@ -72,15 +73,20 @@ class Controller {
 To get collection with all files call `files` method on `Storage`:
 
 ```php
-$files = $post->storage->files();
+$files = $post->storage()->files();
 
 return $files->toArray();
+
+// or
+
+return $post->storage()->toArray();
+
 ```
 
 To remove all files call `flush` method on `Storage`:
 
 ```php
-$files = $post->storage->flush();
+$files = $post->storage()->flush();
 ```
 
 ## File object
@@ -90,7 +96,6 @@ File object has the same methods as Laravel Storage Facade: `exists`, `size`,
 
 It implements `Responsable` and  `Attachable`, so you may use it as `Response` 
 and in `Notification` or `Mailable`.
-
 
 ## Singular Storage
 

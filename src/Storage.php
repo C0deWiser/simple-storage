@@ -187,4 +187,11 @@ class Storage implements StorageContract
                 : $this->disk->put($this->mount, $content)
         );
     }
+
+    public function toArray(): ?array
+    {
+        return $this->singular
+            ? $this->single()?->toArray()
+            : $this->files()->toArray();
+    }
 }

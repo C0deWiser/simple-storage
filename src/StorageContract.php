@@ -3,11 +3,12 @@
 namespace Codewiser\Storage;
 
 use Illuminate\Contracts\Filesystem\Filesystem;
+use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\UploadedFile;
 use Psr\Http\Message\StreamInterface;
 
-interface StorageContract
+interface StorageContract extends Arrayable
 {
     /**
      * Get storage name (aka bucket).
