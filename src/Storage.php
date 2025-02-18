@@ -64,6 +64,11 @@ class Storage implements StorageContract
         return $this->disk;
     }
 
+    public function owner(): Model
+    {
+        return $this->owner;
+    }
+
     /**
      * Mark that bucket holds single file.
      */

@@ -3,6 +3,7 @@
 namespace Codewiser\Storage;
 
 use Illuminate\Contracts\Filesystem\Filesystem;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\UploadedFile;
 use Psr\Http\Message\StreamInterface;
 
@@ -17,6 +18,11 @@ interface StorageContract
      * Get storage filesystem.
      */
     public function disk(): Filesystem;
+
+    /**
+     * Get storage owner.
+     */
+    public function owner(): Model;
 
     /**
      * Unlink file(s) with given keys.
