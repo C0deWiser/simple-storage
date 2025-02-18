@@ -148,8 +148,19 @@ class Storage implements StorageContract
         return null;
     }
 
-    public function upload($content): ?File
+    public function upload($content): null|File|FileCollection
     {
+        if (is_array($content)) {
+            $files = FileCollection::hydrate(
+                $this->disk,
+                array_map(fn($data) => $this->upload($data), $content)
+            );
+
+            return $this->singular
+                ? $files->first()
+                : $files;
+        }
+
         if ($this->singular) {
             $this->flush();
         }

@@ -2,6 +2,8 @@
 
 namespace Tests;
 
+use Codewiser\Storage\File;
+use Codewiser\Storage\FileCollection;
 use Codewiser\Storage\Pool;
 use Codewiser\Storage\Storage;
 use Illuminate\Filesystem\FilesystemAdapter;
@@ -29,8 +31,12 @@ class StorageTest extends TestCase
 
         $pool = Pool::make()->addBucket(Storage::make($model, $this->fs)->mute()->singular());
 
-        $pool->getBucket()->upload(__DIR__ . '/test.png');
-        $pool->getBucket()->upload(__DIR__ . '/test2.png');
+        $file = $pool->getBucket()->upload([
+            __DIR__ . '/test.png',
+            __DIR__ . '/test2.png'
+        ]);
+
+        $this->assertTrue($file instanceof File);
 
         $this->assertEquals(1, $pool->getBucket()->files()->count());
 
@@ -45,8 +51,12 @@ class StorageTest extends TestCase
 
         $pool = Pool::make()->addBucket(Storage::make($model, $this->fs)->mute());
 
-        $pool->getBucket()->upload(__DIR__ . '/test.png');
-        $pool->getBucket()->upload(__DIR__ . '/test2.png');
+        $files = $pool->getBucket()->upload([
+            __DIR__ . '/test.png',
+            __DIR__ . '/test2.png'
+        ]);
+
+        $this->assertTrue($files instanceof FileCollection);
 
         $this->assertEquals(2, $pool->getBucket()->files()->count());
 
@@ -64,13 +74,13 @@ class StorageTest extends TestCase
             ->addBucket(Storage::make($model, $this->fs, 'docs')->mute());
 
         $pool->getBucket()->upload(__DIR__ . '/test.png');
-        $pool->getBucket('docs')->upload(__DIR__ . '/test.png');
-        $pool->getBucket('docs')->upload(__DIR__ . '/test2.png');
+        $pool->getBucket('docs')->upload([
+            __DIR__ . '/test.png',
+            __DIR__ . '/test2.png'
+        ]);
 
         $this->assertEquals(1, $pool->getBucket()->files()->count());
         $this->assertEquals(2, $pool->getBucket('docs')->files()->count());
-
-        dump($pool->getBucket('docs')->single()->toArray());
 
         $pool->getBucket()->flush();
         $pool->getBucket('docs')->flush();

@@ -19,18 +19,18 @@ interface StorageContract
     public function disk(): Filesystem;
 
     /**
-     * Unlink files with given keys.
+     * Unlink file(s) with given keys.
      *
      * @param  string|string[]  $keys
      */
     public function delete(string|array $keys): static;
 
     /**
-     * Upload a new file.
+     * Upload a new file(s).
      *
-     * @param  StreamInterface|\Illuminate\Http\File|UploadedFile|string|resource  $content
+     * @param  StreamInterface|\Illuminate\Http\File|UploadedFile|string|resource|array  $content
      */
-    public function upload(mixed $content): ?File;
+    public function upload(mixed $content): null|File|FileCollection;
 
     /**
      * Remove all files.
