@@ -22,26 +22,20 @@ class Storage implements StorageContract
      * @throws \InvalidArgumentException
      * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
      */
-    public static function resolve(string $path): StorageContract
+    public static function resolve(string $morph, int|string $id, string $bucket = null): StorageContract
     {
-        $path = explode('/', $path);
+        $class = \Illuminate\Database\Eloquent\Relations\Relation::getMorphedModel($morph);
 
-        if (count($path) < 2) {
-            throw new \InvalidArgumentException("File path should be at least {model}/{id}");
-        }
-
-        $classname = \Illuminate\Database\Eloquent\Relations\Relation::getMorphedModel($path[0]);
-
-        if (!$classname && !class_exists($classname)) {
+        if (!$class && !class_exists($class)) {
             throw new \InvalidArgumentException(__('Unrecognized class name for ":model"', [
-                'model' => $path[0]
+                'model' => $class
             ]));
         }
 
-        $model = $classname::query()->findOrFail($path[1]);
+        $model = $class::query()->findOrFail($id);
 
         if ($model instanceof Attachmentable) {
-            return $model->storage($path[2] ?? null);
+            return $model->storage($bucket);
         }
 
         throw new \InvalidArgumentException(__('Model not Attachmentable'));
