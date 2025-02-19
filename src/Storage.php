@@ -38,15 +38,17 @@ class Storage implements StorageContract
             return $model->storage($bucket);
         }
 
-        throw new \InvalidArgumentException(__('Model not Attachmentable'));
+        throw new \InvalidArgumentException(__(':class is not instanceof :instance', [
+            'class'    => $class,
+            'instance' => Attachmentable::class
+        ]));
     }
 
     public static function make(
         \Illuminate\Database\Eloquent\Model&Attachmentable $owner,
         \Illuminate\Contracts\Filesystem\Filesystem|string $disk,
         null|string|\BackedEnum $bucket = null
-    ): static
-    {
+    ): static {
         return new static($owner, $disk, $bucket);
     }
 
