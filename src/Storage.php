@@ -121,7 +121,7 @@ class Storage implements StorageContract
 
     public function files(): FileCollection
     {
-        return FileCollection::hydrate($this->disk, $this->disk->files($this->mount));
+        return FileCollection::hydrate($this->disk, $this->disk->files($this->mount))->latest();
     }
 
     protected function propagateNewFile($path): ?File
@@ -172,6 +172,6 @@ class Storage implements StorageContract
      */
     public function toArray()
     {
-        return $this->files()->latest()->toArray();
+        return $this->files()->toArray();
     }
 }
