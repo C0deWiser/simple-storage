@@ -2,7 +2,9 @@
 
 namespace Codewiser\Storage;
 
-class Pool
+use Illuminate\Contracts\Support\Arrayable;
+
+class Pool implements Arrayable
 {
     /**
      * @var \Illuminate\Support\Collection<string,SingularContract>
@@ -21,7 +23,7 @@ class Pool
 
     public function addBucket(StorageContract $bucket): static
     {
-        $this->buckets->put($bucket->name() ?? '0', $bucket);
+        $this->buckets->add($bucket);
 
         return $this;
     }
@@ -38,5 +40,25 @@ class Pool
     public function getBuckets(): \Illuminate\Support\Collection
     {
         return $this->buckets;
+    }
+
+    /**
+     * Get array of buckets with their files.
+     *
+     * @return array<int,array{"bucket":null|string, "file":null|array, "files":null|array}>
+     */
+    public function toArray(): array
+    {
+        return $this->buckets
+            ->map(
+                fn(StorageContract $bucket) => [
+                    'bucket'      => $bucket->name(),
+                    $bucket instanceof Singular
+                        ? 'file'
+                        : 'files' => $bucket->toArray()
+                ]
+            )
+            ->values()
+            ->toArray();
     }
 }

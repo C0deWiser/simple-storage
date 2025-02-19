@@ -82,6 +82,12 @@ class StorageTest extends TestCase
         $this->assertEquals(1, $pool->getBucket()->files()->count());
         $this->assertEquals(2, $pool->getBucket('docs')->files()->count());
 
+        $this->assertNull($pool->toArray()[0]['bucket']);
+        $this->assertEquals('docs', $pool->toArray()[1]['bucket']);
+        $this->assertArrayHasKey('file', $pool->toArray()[0]);
+        $this->assertArrayHasKey('files', $pool->toArray()[1]);
+        $this->assertCount(2, $pool->toArray()[1]['files']);
+
         $pool->getBucket()->flush();
         $pool->getBucket('docs')->flush();
 
