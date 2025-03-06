@@ -10,9 +10,14 @@ interface StorageContract extends \Illuminate\Contracts\Support\Arrayable
     public function name(): ?string;
 
     /**
+     * Get disk name.
+     */
+    public function disk(): string;
+
+    /**
      * Get storage filesystem.
      */
-    public function disk(): \Illuminate\Contracts\Filesystem\Filesystem;
+    public function filesystem(): \Illuminate\Contracts\Filesystem\Filesystem;
 
     /**
      * Get storage owner.

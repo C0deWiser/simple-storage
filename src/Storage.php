@@ -4,7 +4,7 @@ namespace Codewiser\Storage;
 
 class Storage implements StorageContract
 {
-    readonly public \Illuminate\Contracts\Filesystem\Filesystem $disk;
+    protected \Illuminate\Contracts\Filesystem\Filesystem $filesystem;
 
     /**
      * Mount point (relative to the disk).
@@ -46,22 +46,18 @@ class Storage implements StorageContract
 
     public static function make(
         \Illuminate\Database\Eloquent\Model&Attachmentable $owner,
-        \Illuminate\Contracts\Filesystem\Filesystem|string $disk,
+        string $disk,
         null|string|\BackedEnum $bucket = null
     ): static {
         return new static($owner, $disk, $bucket);
     }
 
     public function __construct(
-        readonly public \Illuminate\Database\Eloquent\Model&Attachmentable $owner,
-        \Illuminate\Contracts\Filesystem\Filesystem|string $disk,
-        readonly protected null|string|\BackedEnum $bucket = null,
+        protected \Illuminate\Database\Eloquent\Model&Attachmentable $owner,
+        protected string $disk,
+        protected null|string|\BackedEnum $bucket = null,
     ) {
-        if (is_string($disk)) {
-            $this->disk = \Illuminate\Support\Facades\Storage::disk($disk);
-        } else {
-            $this->disk = $disk;
-        }
+        $this->filesystem = \Illuminate\Support\Facades\Storage::disk($disk);
 
         $this->mount = $this->owner->getMorphClass().DIRECTORY_SEPARATOR.$this->owner->getKey();
 
@@ -75,9 +71,14 @@ class Storage implements StorageContract
         return $this->bucket instanceof \BackedEnum ? $this->bucket->value : $this->bucket;
     }
 
-    public function disk(): \Illuminate\Contracts\Filesystem\Filesystem
+    public function disk(): string
     {
         return $this->disk;
+    }
+
+    public function filesystem(): \Illuminate\Contracts\Filesystem\Filesystem
+    {
+        return $this->filesystem;
     }
 
     public function owner(): \Illuminate\Database\Eloquent\Model&Attachmentable
@@ -121,14 +122,14 @@ class Storage implements StorageContract
 
     public function files(): FileCollection
     {
-        return FileCollection::hydrate($this->disk, $this->disk->files($this->mount))->latest();
+        return FileCollection::hydrate($this->filesystem, $this->filesystem->files($this->mount))->latest();
     }
 
     protected function propagateNewFile($path): ?File
     {
         if ($path) {
 
-            $file = new File($this->disk, $path);
+            $file = new File($this->filesystem, $path);
 
             if (!$this->mute && $this->owner->getKey()) {
                 event(new FileWasStored($file, $this->owner));
@@ -144,7 +145,7 @@ class Storage implements StorageContract
     {
         if (is_array($content)) {
             return FileCollection::hydrate(
-                $this->disk,
+                $this->filesystem,
                 array_map(fn($data) => $this->upload($data), $content)
             );
         }
@@ -162,8 +163,8 @@ class Storage implements StorageContract
 
         return $this->propagateNewFile(
             $filename
-                ? $this->disk->putFileAs($this->mount, $content, $filename)
-                : $this->disk->put($this->mount, $content)
+                ? $this->filesystem->putFileAs($this->mount, $content, $filename)
+                : $this->filesystem->put($this->mount, $content)
         );
     }
 

@@ -2,10 +2,15 @@
 
 namespace Codewiser\Storage;
 
+use Exception;
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\ItemNotFoundException;
+use Illuminate\Support\MultipleItemsFoundException;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
+use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class StorageController
 {
@@ -18,16 +23,19 @@ class StorageController
 
         try {
             $storage = Storage::resolve($model, $id, $bucket);
-        } catch (\InvalidArgumentException $exception) {
+        } catch (Exception $exception) {
             throw new BadRequestHttpException($exception->getMessage());
         }
 
         Gate::authorize('view', $storage->owner());
 
-        if ($storage instanceof Singular) {
-            return $storage->file();
-        } else {
-            return $storage->files()->one($filename);
+        try {
+            return $storage->files()->sole(fn(File $file) => $file->filename() == $filename);
+        } catch (ItemNotFoundException $exception) {
+            throw new NotFoundHttpException($exception->getMessage());
+        } catch (MultipleItemsFoundException $exception) {
+            // highly improbable but okay
+            throw new ConflictHttpException($exception->getMessage());
         }
     }
 }

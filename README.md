@@ -5,7 +5,7 @@ No database, only local filesystem.
 Every model keeps its files isolated from each over. Path to files 
 formed from model's morph name and its primary key.
 
-Do not forget to `enforceMorphMap` in `AppServiceProvider`.
+> Do not forget to `enforceMorphMap` in `AppServiceProvider`.
 
 ## Define storage 
 
@@ -39,12 +39,24 @@ use Illuminate\Http\Request;
 
 class Controller {
     public function attach(Request $request, Post $post) {
-        $files = $post->storage()
-            ->upload($request->allFiles());
-            
-        return $files->toArray(); 
+
+        return $post->storage()
+            ->upload($request->allFiles())
+            ->toArray(); 
     }
 }
+```
+
+```json
+[{
+    "path": "post/1/test.png",
+    "url": "/storage/post/1/test.png",
+    "name": "test.png",
+    "size": 6434,
+    "hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "mime_type": "image/png",
+    "last_modified": "2025-02-18T12:29:46+00:00"
+}]
 ```
 
 ### Removing files
@@ -145,7 +157,7 @@ $post->storage()->file()->toArray();
 
 ## Storage Pool
 
-The model may have few storages in the same time. Storages must have 
+The model may have few storages at the same time. Storages must have 
 unique names (aka buckets).
 
 ```php
@@ -204,7 +216,9 @@ class Post extends Model implements Attachmentable
             'docs'  => Storage::make($this, 'local', $bucket),
             
             // Default bucket
-            default => Storage::make($this, 'local')->singular(),
+            null => Storage::make($this, 'local')->singular(),
+            
+            default => throw new \InvalidArgumentException("Bucket $bucket is not supported"),
         };
     }
 }
@@ -322,11 +336,13 @@ Let's say we have such private disk in `config/filesystems.php`:
 ```
 
 If so, file url would be about `private/post/1/test.png` (for default bucket)
-or `private/post/1/docs/test.png` (for named bucket).
+or `private/post/1/bucket/test.png` (for named bucket).
 
-We suggest to use a controller `\Codewiser\Storage\StorageController`:
+We suggest to use a controller `\Codewiser\Storage\StorageController`, that 
+is looks so:
 
 ```php
+use Codewiser\Storage\File;
 use Codewiser\Storage\Storage;
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Http\Request;
@@ -342,19 +358,13 @@ class StorageController
             $bucket = null;
         }
 
-        try {
-            $storage = Storage::resolve($model, $id, $bucket);
-        } catch (\InvalidArgumentException $exception) {
-            throw new BadRequestHttpException($exception->getMessage());
-        }
+        $storage = Storage::resolve($model, $id, $bucket);
 
         Gate::authorize('view', $storage->owner());
 
-        if ($storage instanceof Singular) {
-            return $storage->file();
-        } else {
-            return $storage->files()->one($filename);
-        }
+        return $storage->files()->sole(
+            fn(File $file) => $file->filename() == $filename
+        );
     }
 }
 ```
