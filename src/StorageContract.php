@@ -5,9 +5,19 @@ namespace Codewiser\Storage;
 interface StorageContract extends \Illuminate\Contracts\Support\Arrayable
 {
     /**
+     * Switch bucket on-a-fly.
+     */
+    public function bucket(string $bucket): static;
+
+    /**
      * Get storage name (aka bucket).
      */
     public function name(): ?string;
+
+    /**
+     * Switch disk on-a-fly.
+     */
+    public function onDisk(string $disk): static;
 
     /**
      * Get disk name.

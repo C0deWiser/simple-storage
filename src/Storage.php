@@ -68,6 +68,38 @@ class Storage implements StorageContract
         }
     }
 
+    # Mutators
+
+    public function bucket(string $bucket): static
+    {
+        return static::make($this->owner, $this->disk, $bucket)->mute($this->mute);
+    }
+
+    public function onDisk(string $disk): static
+    {
+        return static::make($this->owner, $disk, $this->bucket)->mute($this->mute);
+    }
+
+    /**
+     * Make this bucket hold single file.
+     */
+    public function singular(): SingularContract
+    {
+        return Singular::make($this->owner, $this->disk, $this->bucket)->mute($this->mute);
+    }
+
+    /**
+     * Mute storage events.
+     */
+    public function mute(bool $mute = true): static
+    {
+        $this->mute = $mute;
+
+        return $this;
+    }
+
+    # Properties
+
     public function name(): ?string
     {
         return $this->bucket instanceof \BackedEnum ? $this->bucket->value : $this->bucket;
@@ -88,23 +120,7 @@ class Storage implements StorageContract
         return $this->owner;
     }
 
-    /**
-     * Make this bucket hold single file.
-     */
-    public function singular(): SingularContract
-    {
-        return Singular::make($this->owner, $this->disk, $this->bucket)->mute($this->mute);
-    }
-
-    /**
-     * Mute storage events.
-     */
-    public function mute(bool $mute = true): static
-    {
-        $this->mute = $mute;
-
-        return $this;
-    }
+    # Actions
 
     public function delete(string|array $keys): static
     {
