@@ -46,7 +46,7 @@ class Storage implements StorageContract
 
     public static function make(
         \Illuminate\Database\Eloquent\Model&Attachmentable $owner,
-        string $disk,
+        null|string $disk = null,
         null|string|\BackedEnum $bucket = null
     ): static {
         return new static($owner, $disk, $bucket);
@@ -54,10 +54,12 @@ class Storage implements StorageContract
 
     public function __construct(
         protected \Illuminate\Database\Eloquent\Model&Attachmentable $owner,
-        protected string $disk,
+        protected null|string $disk = null,
         protected null|string|\BackedEnum $bucket = null,
     ) {
-        $this->filesystem = \Illuminate\Support\Facades\Storage::disk($disk);
+        $this->disk = $this->disk ?? config('filesystems.default');
+
+        $this->filesystem = \Illuminate\Support\Facades\Storage::disk($this->disk);
 
         $this->mount = $this->owner->getMorphClass().DIRECTORY_SEPARATOR.$this->owner->getKey();
 

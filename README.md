@@ -11,7 +11,7 @@ formed from model's morph name and its primary key.
 
 Implement `Attachmentable` contract on `Model`.
 
-In the example below the model will keep files at `public` disk in `post/{id}`
+In the example below the model will keep files on default disk at `post/{id}`
 path.
 
 ```php
@@ -24,7 +24,7 @@ class Post extends Model implements Attachmentable
 {
     public function storage(string|BackedEnum $bucket = null): StorageContract
     {
-        return Storage::make(owner: $this, disk: 'public');
+        return Storage::make($this);
     }
 }
 ```
@@ -139,7 +139,7 @@ class Post extends Model implements Attachmentable
 {
     public function storage(string|BackedEnum $bucket = null): StorageContract|Singular
     {
-        return Storage::make(owner: $this, disk: 'public')->singular();
+        return Storage::make($this, disk: 'public')->singular();
     }
 }
 ```
@@ -175,11 +175,11 @@ class Post extends Model implements Attachmentable
         return match ($bucket)
             
             // One cover
-            'cover' => Storage::make($this, 'public', bucket: $bucket)
+            'cover' => Storage::make($this, bucket: $bucket)
                 ->singular(),
                 
             // Many docs
-            'docs'  => Storage::make($this, 'public', bucket: $bucket),
+            'docs'  => Storage::make($this, bucket: $bucket),
             
             default => throw new \InvalidArgumentException("Bucket $bucket is not supported"),
         };
@@ -213,10 +213,10 @@ class Post extends Model implements Attachmentable
         return match ($bucket)
         
             // Named bucket
-            'docs'  => Storage::make($this, 'local', $bucket),
+            'docs'  => Storage::make($this, bucket: $bucket),
             
             // Default bucket
-            null => Storage::make($this, 'local')->singular(),
+            null => Storage::make($this)->singular(),
             
             default => throw new \InvalidArgumentException("Bucket $bucket is not supported"),
         };
@@ -250,8 +250,8 @@ class Post extends Model implements Attachmentable
     public function pool(): Pool
     {
         return Pool::make()
-            ->addBucket(Storage::make($this, 'local')->singular())
-            ->addBucket(Storage::make($this, 'local', 'docs'));        
+            ->addBucket(Storage::make($this)->singular())
+            ->addBucket(Storage::make($this, bucket: 'docs'));        
     }
 
     public function storage(string|BackedEnum $bucket = null): StorageContract|Singular
