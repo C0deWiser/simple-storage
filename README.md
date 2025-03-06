@@ -24,7 +24,7 @@ class Post extends Model implements Attachmentable
 {
     public function storage(string|BackedEnum $bucket = null): StorageContract
     {
-        return Storage::make($this);
+        return Storage::make($this, bucket: $bucket);
     }
 }
 ```
@@ -139,7 +139,7 @@ class Post extends Model implements Attachmentable
 {
     public function storage(string|BackedEnum $bucket = null): StorageContract|Singular
     {
-        return Storage::make($this, disk: 'public')->singular();
+        return Storage::make($this, disk: 'public', bucket: $bucket)->singular();
     }
 }
 ```
