@@ -164,7 +164,7 @@ class Storage implements StorageContract
 
     public function upload($content): null|File|FileCollection
     {
-        if (is_null($content)) {
+        if (!$content) {
             return null;
         }
 
@@ -178,26 +178,22 @@ class Storage implements StorageContract
         $filename = null;
 
         if (is_string($content) && file_exists($content)) {
-            $info = pathinfo($content);
-            $filename = $info['basename'];
+            $filename = pathinfo($content)['basename'];
         }
 
         if ($content instanceof \Illuminate\Http\UploadedFile) {
             $filename = $content->getClientOriginalName();
         }
 
-        if (!$filename) {
-            throw new \RuntimeException('Can not extract filename. Use put() method instead.');
-        }
-
-        return $this->propagateNewFile(
-            $this->disk->putFileAs($this->mount, $content, $filename)
+        return $this->propagateNewFile($filename
+            ? $this->disk->putFileAs($this->mount, $content, $filename)
+            : $this->disk->putFile($this->mount, $content)
         );
     }
 
     public function put(mixed $content, string $filename): null|File
     {
-        if (is_null($content)) {
+        if (!$content) {
             return null;
         }
 
