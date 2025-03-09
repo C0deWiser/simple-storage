@@ -4,7 +4,7 @@ namespace Codewiser\Storage;
 
 class Storage implements StorageContract
 {
-    protected \Illuminate\Contracts\Filesystem\Filesystem $filesystem;
+    protected \Illuminate\Contracts\Filesystem\Filesystem $disk;
 
     /**
      * Mount point (relative to the disk).
@@ -46,7 +46,7 @@ class Storage implements StorageContract
 
     public static function make(
         \Illuminate\Database\Eloquent\Model&Attachmentable $owner,
-        null|string $disk = null,
+        null|string|\Illuminate\Contracts\Filesystem\Filesystem $disk = null,
         null|string|\BackedEnum $bucket = null
     ): static {
         return new static($owner, $disk, $bucket);
@@ -54,14 +54,17 @@ class Storage implements StorageContract
 
     public function __construct(
         protected \Illuminate\Database\Eloquent\Model&Attachmentable $owner,
-        protected null|string $disk = null,
+        null|string|\Illuminate\Contracts\Filesystem\Filesystem $disk = null,
         protected null|string|\BackedEnum $bucket = null,
     ) {
-        $this->disk = $this->disk ?? config('filesystems.default');
 
-        $this->filesystem = \Illuminate\Support\Facades\Storage::disk($this->disk);
+        $disk = $disk ?? config('filesystems.default');
 
-        $this->mount = $this->owner->getMorphClass().DIRECTORY_SEPARATOR.$this->owner->getKey();
+        $this->disk = is_string($disk)
+            ? \Illuminate\Support\Facades\Storage::disk($disk)
+            : $disk;
+
+        $this->mount = $this->owner->getMorphClass().DIRECTORY_SEPARATOR.($this->owner->getKey() ?? 0);
 
         if ($bucket = $this->name()) {
             $this->mount = $this->mount.DIRECTORY_SEPARATOR.$bucket;
@@ -75,7 +78,7 @@ class Storage implements StorageContract
         return static::make($this->owner, $this->disk, $bucket)->mute($this->mute);
     }
 
-    public function onDisk(string $disk): static
+    public function onDisk(string|\Illuminate\Contracts\Filesystem\Filesystem $disk): static
     {
         return static::make($this->owner, $disk, $this->bucket)->mute($this->mute);
     }
@@ -105,19 +108,19 @@ class Storage implements StorageContract
         return $this->bucket instanceof \BackedEnum ? $this->bucket->value : $this->bucket;
     }
 
-    public function disk(): string
+    public function disk(): \Illuminate\Contracts\Filesystem\Filesystem
     {
         return $this->disk;
-    }
-
-    public function filesystem(): \Illuminate\Contracts\Filesystem\Filesystem
-    {
-        return $this->filesystem;
     }
 
     public function owner(): \Illuminate\Database\Eloquent\Model&Attachmentable
     {
         return $this->owner;
+    }
+
+    public function path(): string
+    {
+        return $this->mount;
     }
 
     # Actions
@@ -140,14 +143,14 @@ class Storage implements StorageContract
 
     public function files(): FileCollection
     {
-        return FileCollection::hydrate($this->filesystem, $this->filesystem->files($this->mount))->latest();
+        return FileCollection::hydrate($this->disk, $this->disk->files($this->mount))->latest();
     }
 
     protected function propagateNewFile($path): ?File
     {
         if ($path) {
 
-            $file = new File($this->filesystem, $path);
+            $file = new File($this->disk, $path);
 
             if (!$this->mute && $this->owner->getKey()) {
                 event(new FileWasStored($file, $this->owner));
@@ -163,7 +166,7 @@ class Storage implements StorageContract
     {
         if (is_array($content)) {
             return FileCollection::hydrate(
-                $this->filesystem,
+                $this->disk,
                 array_map(fn($data) => $this->upload($data), $content)
             );
         }
@@ -179,10 +182,19 @@ class Storage implements StorageContract
             $filename = $content->getClientOriginalName();
         }
 
+        if (!$filename) {
+            throw new \RuntimeException('Can not extract filename. Use put() method instead.');
+        }
+
         return $this->propagateNewFile(
-            $filename
-                ? $this->filesystem->putFileAs($this->mount, $content, $filename)
-                : $this->filesystem->put($this->mount, $content)
+            $this->disk->putFileAs($this->mount, $content, $filename)
+        );
+    }
+
+    public function put(mixed $content, string $filename): null|File
+    {
+        return $this->propagateNewFile(
+            $this->disk->putFileAs($this->mount, $content, $filename)
         );
     }
 

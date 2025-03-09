@@ -17,22 +17,22 @@ interface StorageContract extends \Illuminate\Contracts\Support\Arrayable
     /**
      * Switch disk on-a-fly.
      */
-    public function onDisk(string $disk): static;
-
-    /**
-     * Get disk name.
-     */
-    public function disk(): string;
+    public function onDisk(string|\Illuminate\Contracts\Filesystem\Filesystem $disk): static;
 
     /**
      * Get storage filesystem.
      */
-    public function filesystem(): \Illuminate\Contracts\Filesystem\Filesystem;
+    public function disk(): \Illuminate\Contracts\Filesystem\Filesystem;
 
     /**
      * Get storage owner.
      */
     public function owner(): \Illuminate\Database\Eloquent\Model&Attachmentable;
+
+    /**
+     * Get storage mount point (relative to a disk).
+     */
+    public function path(): string;
 
     /**
      * Unlink file(s) with given keys.
@@ -47,6 +47,11 @@ interface StorageContract extends \Illuminate\Contracts\Support\Arrayable
      * @param  \Psr\Http\Message\StreamInterface|\Illuminate\Http\File|\Illuminate\Http\UploadedFile|string|resource|array  $content
      */
     public function upload(mixed $content): null|File|FileCollection;
+
+    /**
+     * Put single file to a storage with a given name.
+     */
+    public function put(mixed $content, string $filename): null|File;
 
     /**
      * Remove all files.
