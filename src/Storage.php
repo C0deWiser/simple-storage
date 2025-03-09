@@ -177,7 +177,7 @@ class Storage implements StorageContract
 
         $filename = null;
 
-        if (is_string($content)) {
+        if (is_string($content) && file_exists($content)) {
             $info = pathinfo($content);
             $filename = $info['basename'];
         }
