@@ -193,9 +193,11 @@ class Storage implements StorageContract
 
     public function put(mixed $content, string $filename): null|File
     {
-        return $this->propagateNewFile(
-            $this->disk->putFileAs($this->mount, $content, $filename)
-        );
+        $filename = $this->mount.DIRECTORY_SEPARATOR.$filename;
+
+        $this->disk->put($filename, $content);
+
+        return $this->propagateNewFile($filename);
     }
 
     /**
