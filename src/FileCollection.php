@@ -51,6 +51,17 @@ class FileCollection extends \Illuminate\Support\Collection
                 if ($a->lastModified() == $b->lastModified()) {
                     return 0;
                 }
+                return ($a->lastModified() > $b->lastModified()) ? -1 : 1;
+            });
+    }
+
+    public function oldest(): static
+    {
+        return $this
+            ->sort(function (File $a, File $b) {
+                if ($a->lastModified() == $b->lastModified()) {
+                    return 0;
+                }
                 return ($a->lastModified() < $b->lastModified()) ? -1 : 1;
             });
     }
