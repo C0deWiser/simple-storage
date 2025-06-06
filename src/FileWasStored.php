@@ -17,7 +17,7 @@ class FileWasStored
      * Create a new event instance.
      */
     public function __construct(
-        public File $file,
+        public string $path,
         public Model&Attachmentable $owner
     ) {
         //
