@@ -47,7 +47,7 @@ class Storage implements StorageContract
     public static function make(
         \Illuminate\Database\Eloquent\Model&Attachmentable $owner,
         null|string|\Illuminate\Contracts\Filesystem\Filesystem $disk = null,
-        null|string|\UnitEnum $bucket = null
+        null|string|\BackedEnum $bucket = null
     ): static {
         return new static($owner, $disk, $bucket);
     }
@@ -55,7 +55,7 @@ class Storage implements StorageContract
     public function __construct(
         protected \Illuminate\Database\Eloquent\Model&Attachmentable $owner,
         null|string|\Illuminate\Contracts\Filesystem\Filesystem $disk = null,
-        protected null|string|\UnitEnum $bucket = null,
+        protected null|string|\BackedEnum $bucket = null,
     ) {
 
         $disk = $disk ?? config('filesystems.default');
@@ -73,7 +73,7 @@ class Storage implements StorageContract
 
     # Mutators
 
-    public function bucket(string|\UnitEnum $bucket): static
+    public function bucket(string|\BackedEnum $bucket): static
     {
         return static::make($this->owner, $this->disk, $bucket)->mute($this->mute);
     }
@@ -107,9 +107,6 @@ class Storage implements StorageContract
     {
         if ($this->bucket instanceof \BackedEnum) {
             return $this->bucket->value;
-        }
-        if ($this->bucket instanceof \UnitEnum) {
-            return $this->bucket->name;
         }
 
         return $this->bucket;

@@ -2,7 +2,7 @@
 
 namespace Tests;
 
-enum Bucket
+enum Bucket: string
 {
-    case docs;
+    case docs = 'docs';
 }

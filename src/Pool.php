@@ -25,13 +25,10 @@ class Pool implements Arrayable
         return $this;
     }
 
-    public function getBucket(string|\UnitEnum $name = null): StorageContract
+    public function getBucket(string|\BackedEnum $name = null): StorageContract
     {
         if ($name instanceof \BackedEnum) {
             $name = $name->value;
-        }
-        if ($name instanceof \UnitEnum) {
-            $name = $name->name;
         }
 
         return $this->buckets->sole(fn(StorageContract $bucket) => $bucket->name() === $name);

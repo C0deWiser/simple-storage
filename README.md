@@ -22,7 +22,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Post extends Model implements Attachmentable
 {
-    public function storage(string|\UnitEnum $bucket = null): StorageContract
+    public function storage(string|\BackedEnum $bucket = null): StorageContract
     {
         return Storage::make($this, bucket: $bucket);
     }
@@ -137,7 +137,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Post extends Model implements Attachmentable
 {
-    public function storage(string|\UnitEnum $bucket = null): StorageContract|Singular
+    public function storage(string|\BackedEnum $bucket = null): StorageContract|Singular
     {
         return Storage::make($this, disk: 'public', bucket: $bucket)->singular();
     }
@@ -169,7 +169,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Post extends Model implements Attachmentable
 {
-    public function storage(string|\UnitEnum $bucket = null): StorageContract|Singular
+    public function storage(string|\BackedEnum $bucket = null): StorageContract|Singular
     {
         return match ($bucket)
             
@@ -206,7 +206,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Post extends Model implements Attachmentable
 {
-    public function storage(string|\UnitEnum $bucket = null): StorageContract|Singular
+    public function storage(string|\BackedEnum $bucket = null): StorageContract|Singular
     {
         return match ($bucket)
         
@@ -251,7 +251,7 @@ class Post extends Model implements Attachmentable
             ->addBucket(Storage::make($this, bucket: 'docs'));        
     }
 
-    public function storage(string|\UnitEnum $bucket = null): StorageContract|Singular
+    public function storage(string|\BackedEnum $bucket = null): StorageContract|Singular
     {
         return $this->pool()->getBucket($bucket);
     }

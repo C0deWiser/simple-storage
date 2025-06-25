@@ -71,7 +71,7 @@ class StorageTest extends TestCase
 
         $pool = Pool::make()
             ->addBucket(Storage::make($model, $this->fs)->mute()->singular())
-            ->addBucket(Storage::make($model, $this->fs, 'docs')->mute());
+            ->addBucket(Storage::make($model, $this->fs, Bucket::docs)->mute());
 
         $pool->getBucket()->upload(__DIR__ . '/test.png');
         $pool->getBucket('docs')->upload([

@@ -7,7 +7,7 @@ interface StorageContract extends \Illuminate\Contracts\Support\Arrayable
     /**
      * Switch bucket on-the-fly.
      */
-    public function bucket(string|\UnitEnum $bucket): static;
+    public function bucket(string|\BackedEnum $bucket): static;
 
     /**
      * Get storage scalar name (aka bucket).
