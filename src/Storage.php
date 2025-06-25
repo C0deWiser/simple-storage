@@ -47,7 +47,7 @@ class Storage implements StorageContract
     public static function make(
         \Illuminate\Database\Eloquent\Model&Attachmentable $owner,
         null|string|\Illuminate\Contracts\Filesystem\Filesystem $disk = null,
-        null|string|\BackedEnum $bucket = null
+        null|string|\UnitEnum $bucket = null
     ): static {
         return new static($owner, $disk, $bucket);
     }
@@ -55,7 +55,7 @@ class Storage implements StorageContract
     public function __construct(
         protected \Illuminate\Database\Eloquent\Model&Attachmentable $owner,
         null|string|\Illuminate\Contracts\Filesystem\Filesystem $disk = null,
-        protected null|string|\BackedEnum $bucket = null,
+        protected null|string|\UnitEnum $bucket = null,
     ) {
 
         $disk = $disk ?? config('filesystems.default');
@@ -73,7 +73,7 @@ class Storage implements StorageContract
 
     # Mutators
 
-    public function bucket(string $bucket): static
+    public function bucket(string|\UnitEnum $bucket): static
     {
         return static::make($this->owner, $this->disk, $bucket)->mute($this->mute);
     }
@@ -84,7 +84,7 @@ class Storage implements StorageContract
     }
 
     /**
-     * Make this bucket hold single file.
+     * Make this bucket hold a single file.
      */
     public function singular(): SingularContract
     {
@@ -105,7 +105,14 @@ class Storage implements StorageContract
 
     public function name(): ?string
     {
-        return $this->bucket instanceof \BackedEnum ? $this->bucket->value : $this->bucket;
+        if ($this->bucket instanceof \BackedEnum) {
+            return $this->bucket->value;
+        }
+        if ($this->bucket instanceof \UnitEnum) {
+            return $this->bucket->name;
+        }
+
+        return $this->bucket;
     }
 
     public function disk(): \Illuminate\Contracts\Filesystem\Filesystem
@@ -204,10 +211,7 @@ class Storage implements StorageContract
         return $this->propagateNewFile($filename);
     }
 
-    /**
-     * @return array
-     */
-    public function toArray()
+    public function toArray(): array
     {
         return $this->files()->toArray();
     }

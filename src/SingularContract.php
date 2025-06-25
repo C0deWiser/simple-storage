@@ -5,7 +5,7 @@ namespace Codewiser\Storage;
 interface SingularContract extends StorageContract
 {
     /**
-     * Get single file.
+     * Get a single file.
      */
     public function file(): ?File;
 }

@@ -3,9 +3,9 @@
 No database, only local filesystem.
 
 Every model keeps its files isolated from each over. Path to files 
-formed from model's morph name and its primary key.
+formed from the model's morph name and its primary key.
 
-> Do not forget to `enforceMorphMap` in `AppServiceProvider`.
+> Remember to `enforceMorphMap` in `AppServiceProvider`!
 
 ## Define storage 
 
@@ -22,7 +22,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Post extends Model implements Attachmentable
 {
-    public function storage(string|BackedEnum $bucket = null): StorageContract
+    public function storage(string|\UnitEnum $bucket = null): StorageContract
     {
         return Storage::make($this, bucket: $bucket);
     }
@@ -31,7 +31,7 @@ class Post extends Model implements Attachmentable
 
 ### Uploading files
 
-You may add files from `UploadedFile`, from local path or remote url.
+You may add files from `UploadedFile`, from a local path or remote url.
 You may upload multiple files at once.
 
 ```php
@@ -62,7 +62,7 @@ class Controller {
 ### Removing files
 
 File `path` attribute is a relative path to a disk, e.g. `post/1/test.png`. 
-Use `path` attribute to delete file. You may delete multiple files at once.
+Use `path` attribute to delete a file. You may delete multiple files at once.
 
 ```php
 use Illuminate\Http\Request;
@@ -106,7 +106,7 @@ $post->storage()->files()->toArray();
 File object has the same methods as Laravel Storage Facade: `exists`, `size`,
 `lastModified`, `delete`, `checksum`, `url` etc.
 
-Every stored file represented with such array:
+Every stored file represented with such an array:
 
 ```json
 {
@@ -137,14 +137,14 @@ use Illuminate\Database\Eloquent\Model;
 
 class Post extends Model implements Attachmentable
 {
-    public function storage(string|BackedEnum $bucket = null): StorageContract|Singular
+    public function storage(string|\UnitEnum $bucket = null): StorageContract|Singular
     {
         return Storage::make($this, disk: 'public', bucket: $bucket)->singular();
     }
 }
 ```
 
-When you upload next file to a storage, all previous files will be removed.
+When you upload the next file to a storage, all previous files will be removed.
 
 Singular storage has only one file, so `files` collection will contain only one 
 element maximum. You may use `file` method instead. 
@@ -166,11 +166,10 @@ use Codewiser\Storage\Storage;
 use Codewiser\Storage\Singular;
 use Codewiser\Storage\StorageContract;
 use Illuminate\Database\Eloquent\Model;
-use BackedEnum;
 
 class Post extends Model implements Attachmentable
 {
-    public function storage(string|BackedEnum $bucket = null): StorageContract|Singular
+    public function storage(string|\UnitEnum $bucket = null): StorageContract|Singular
     {
         return match ($bucket)
             
@@ -181,7 +180,7 @@ class Post extends Model implements Attachmentable
             // Many docs
             'docs'  => Storage::make($this, bucket: $bucket),
             
-            default => throw new \InvalidArgumentException("Bucket $bucket is not supported"),
+            default => throw new \InvalidArgumentException("Bucket is not supported"),
         };
     }
 }
@@ -204,11 +203,10 @@ use Codewiser\Storage\Storage;
 use Codewiser\Storage\Singular;
 use Codewiser\Storage\StorageContract;
 use Illuminate\Database\Eloquent\Model;
-use BackedEnum;
 
 class Post extends Model implements Attachmentable
 {
-    public function storage(string|BackedEnum $bucket = null): StorageContract|Singular
+    public function storage(string|\UnitEnum $bucket = null): StorageContract|Singular
     {
         return match ($bucket)
         
@@ -218,7 +216,7 @@ class Post extends Model implements Attachmentable
             // Default bucket
             null => Storage::make($this)->singular(),
             
-            default => throw new \InvalidArgumentException("Bucket $bucket is not supported"),
+            default => throw new \InvalidArgumentException("Bucket is not supported"),
         };
     }
 }
@@ -243,7 +241,6 @@ use Codewiser\Storage\Storage;
 use Codewiser\Storage\Singular;
 use Codewiser\Storage\StorageContract;
 use Illuminate\Database\Eloquent\Model;
-use BackedEnum;
 
 class Post extends Model implements Attachmentable
 {
@@ -254,7 +251,7 @@ class Post extends Model implements Attachmentable
             ->addBucket(Storage::make($this, bucket: 'docs'));        
     }
 
-    public function storage(string|BackedEnum $bucket = null): StorageContract|Singular
+    public function storage(string|\UnitEnum $bucket = null): StorageContract|Singular
     {
         return $this->pool()->getBucket($bucket);
     }
@@ -322,7 +319,7 @@ The file is directly accessible only then published in public local
 filesystem. In other cases — private or cloud filesystem — application needs 
 a controller to make files accessible to the users.
 
-Let's say we have such private disk in `config/filesystems.php`:
+Let's say we have such a private disk in `config/filesystems.php`:
 
 ```php
 'local' => [

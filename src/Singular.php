@@ -32,11 +32,8 @@ class Singular extends Storage implements SingularContract
         return parent::put($content, $filename);
     }
 
-    /**
-     * @return null|array
-     */
-    public function toArray()
+    public function toArray(): array
     {
-        return $this->file()?->toArray();
+        return $this->file()?->toArray() ?? [];
     }
 }

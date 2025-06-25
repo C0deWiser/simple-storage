@@ -35,7 +35,7 @@ class FileCollection extends \Illuminate\Support\Collection
     }
 
     /**
-     * Get file by its filename.
+     * Get a file by its filename.
      */
     public function one(string $filename): ?File
     {

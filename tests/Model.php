@@ -2,7 +2,6 @@
 
 namespace Tests;
 
-use BackedEnum;
 use Codewiser\Storage\Attachmentable;
 use Codewiser\Storage\Pool;
 use Codewiser\Storage\Storage;
@@ -23,7 +22,7 @@ class Model extends \Illuminate\Database\Eloquent\Model implements Attachmentabl
         return 'model';
     }
 
-    public function storage(string|BackedEnum $bucket = null): StorageContract
+    public function storage(string|\UnitEnum $bucket = null): StorageContract
     {
         $root = __DIR__.'/../storage';
         $adapter = new LocalFilesystemAdapter($root);

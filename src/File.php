@@ -16,38 +16,30 @@ class File implements \Illuminate\Contracts\Support\Arrayable, \Illuminate\Contr
 
     /**
      * Determine if a file exists.
-     *
-     * @return bool
      */
-    public function exists()
+    public function exists(): bool
     {
         return $this->disk->fileExists($this->path);
     }
 
     /**
      * Determine if a file is missing.
-     *
-     * @return bool
      */
-    public function missing()
+    public function missing(): bool
     {
         return $this->disk->fileMissing($this->path);
     }
 
     /**
      * Get the full path to the file.
-     *
-     * @return string
      */
-    public function path()
+    public function path(): string
     {
         return $this->disk->path($this->path);
     }
 
     /**
      * Delete the file at a given path.
-     *
-     * @return bool
      */
     public function delete(): bool
     {
@@ -56,10 +48,8 @@ class File implements \Illuminate\Contracts\Support\Arrayable, \Illuminate\Contr
 
     /**
      * Get the contents of a file.
-     *
-     * @return string|null
      */
-    public function get()
+    public function get(): ?string
     {
         return $this->disk->get($this->path);
     }
@@ -79,10 +69,8 @@ class File implements \Illuminate\Contracts\Support\Arrayable, \Illuminate\Contr
      *
      * @param  \Psr\Http\Message\StreamInterface|\Illuminate\Http\File|\Illuminate\Http\UploadedFile|string|resource  $contents
      * @param  mixed  $options
-     *
-     * @return bool
      */
-    public function put($contents, $options = [])
+    public function put($contents, $options = []): bool
     {
         return $this->disk->put($this->path, $contents, $options);
     }
@@ -91,57 +79,40 @@ class File implements \Illuminate\Contracts\Support\Arrayable, \Illuminate\Contr
      * Write a new file using a stream.
      *
      * @param  resource  $resource
-     * @param  array  $options
-     *
-     * @return bool
      */
-    public function writeStream($resource, array $options = [])
+    public function writeStream($resource, array $options = []): bool
     {
         return $this->disk->writeStream($this->path, $resource, $options);
     }
 
     /**
      * Get the visibility for the given path.
-     *
-     * @return string
      */
-    public function getVisibility()
+    public function getVisibility(): string
     {
         return $this->disk->getVisibility($this->path);
     }
 
     /**
      * Set the visibility for the given path.
-     *
-     * @param  string  $visibility
-     *
-     * @return bool
      */
-    public function setVisibility($visibility)
+    public function setVisibility(string $visibility): bool
     {
         return $this->disk->setVisibility($this->path, $visibility);
     }
 
     /**
      * Prepend to a file.
-     *
-     * @param  string  $data
-     *
-     * @return bool
      */
-    public function prepend($data)
+    public function prepend(string $data): bool
     {
         return $this->disk->prepend($this->path, $data);
     }
 
     /**
      * Append to a file.
-     *
-     * @param  string  $data
-     *
-     * @return bool
      */
-    public function append($data)
+    public function append(string $data): bool
     {
         return $this->disk->append($this->path, $data);
     }
@@ -164,10 +135,8 @@ class File implements \Illuminate\Contracts\Support\Arrayable, \Illuminate\Contr
 
     /**
      * Get the file size of a given file.
-     *
-     * @return int
      */
-    public function size()
+    public function size(): int
     {
         return $this->disk->size($this->path);
     }
@@ -175,21 +144,17 @@ class File implements \Illuminate\Contracts\Support\Arrayable, \Illuminate\Contr
     /**
      * Get the checksum for a file.
      *
-     * @return string|false
-     *
      * @throws \League\Flysystem\UnableToProvideChecksum
      */
-    public function checksum(array $options = [])
+    public function checksum(array $options = []): bool|string
     {
         return $this->disk->checksum($this->path, $options);
     }
 
     /**
      * Get the file's last modification time.
-     *
-     * @return int
      */
-    public function lastModified()
+    public function lastModified(): int
     {
         return $this->disk->lastModified($this->path);
     }
@@ -217,38 +182,25 @@ class File implements \Illuminate\Contracts\Support\Arrayable, \Illuminate\Contr
     /**
      * Get the URL for the file at the given path.
      *
-     * @return string
-     *
      * @throws \RuntimeException
      */
-    public function url()
+    public function url(): string
     {
         return $this->disk->url($this->path);
     }
 
     /**
      * Create a streamed response for a given file.
-     *
-     * @param  string|null  $name
-     * @param  array  $headers
-     * @param  string|null  $disposition
-     *
-     * @return \Symfony\Component\HttpFoundation\StreamedResponse
      */
-    public function response($name = null, array $headers = [], $disposition = 'inline')
+    public function response(string $name = null, array $headers = [], string $disposition = 'inline'): \Symfony\Component\HttpFoundation\StreamedResponse
     {
         return $this->disk->response($this->path, $name ?? $this->filename(), $headers, $disposition);
     }
 
     /**
      * Create a streamed download response for a given file.
-     *
-     * @param  string|null  $name
-     * @param  array  $headers
-     *
-     * @return \Symfony\Component\HttpFoundation\StreamedResponse
      */
-    public function download($name = null, array $headers = [])
+    public function download(string $name = null, array $headers = []): \Symfony\Component\HttpFoundation\StreamedResponse
     {
         return $this->disk->download($this->path, $name ?? $this->filename(), $headers);
     }

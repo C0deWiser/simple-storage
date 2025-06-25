@@ -4,5 +4,5 @@ namespace Codewiser\Storage;
 
 interface Attachmentable
 {
-    public function storage(string|\BackedEnum $bucket = null): StorageContract;
+    public function storage(string|\UnitEnum $bucket = null): StorageContract;
 }

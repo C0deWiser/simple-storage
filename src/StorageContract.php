@@ -5,17 +5,17 @@ namespace Codewiser\Storage;
 interface StorageContract extends \Illuminate\Contracts\Support\Arrayable
 {
     /**
-     * Switch bucket on-a-fly.
+     * Switch bucket on-the-fly.
      */
-    public function bucket(string $bucket): static;
+    public function bucket(string|\UnitEnum $bucket): static;
 
     /**
-     * Get storage name (aka bucket).
+     * Get storage scalar name (aka bucket).
      */
     public function name(): ?string;
 
     /**
-     * Switch disk on-a-fly.
+     * Switch disk on-the-fly.
      */
     public function onDisk(string|\Illuminate\Contracts\Filesystem\Filesystem $disk): static;
 
@@ -25,7 +25,7 @@ interface StorageContract extends \Illuminate\Contracts\Support\Arrayable
     public function disk(): \Illuminate\Contracts\Filesystem\Filesystem;
 
     /**
-     * Get storage owner.
+     * Get a storage owner.
      */
     public function owner(): \Illuminate\Database\Eloquent\Model&Attachmentable;
 
@@ -49,7 +49,7 @@ interface StorageContract extends \Illuminate\Contracts\Support\Arrayable
     public function upload(mixed $content): null|File|FileCollection;
 
     /**
-     * Put single file to a storage with a given name.
+     * Put a single file to a storage with a given name.
      */
     public function put(mixed $content, string $filename): null|File;
 
