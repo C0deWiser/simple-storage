@@ -192,7 +192,7 @@ class File implements \Illuminate\Contracts\Support\Arrayable, \Illuminate\Contr
     /**
      * Create a streamed response for a given file.
      */
-    public function response(string $name = null, array $headers = [], string $disposition = 'inline'): \Symfony\Component\HttpFoundation\StreamedResponse
+    public function response(?string $name = null, array $headers = [], string $disposition = 'inline'): \Symfony\Component\HttpFoundation\StreamedResponse
     {
         return $this->disk->response($this->path, $name ?? $this->filename(), $headers, $disposition);
     }
@@ -200,7 +200,7 @@ class File implements \Illuminate\Contracts\Support\Arrayable, \Illuminate\Contr
     /**
      * Create a streamed download response for a given file.
      */
-    public function download(string $name = null, array $headers = []): \Symfony\Component\HttpFoundation\StreamedResponse
+    public function download(?string $name = null, array $headers = []): \Symfony\Component\HttpFoundation\StreamedResponse
     {
         return $this->disk->download($this->path, $name ?? $this->filename(), $headers);
     }

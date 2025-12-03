@@ -22,7 +22,7 @@ class Storage implements StorageContract
      * @throws \InvalidArgumentException
      * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
      */
-    public static function resolve(string $morph, int|string $id, string $bucket = null): StorageContract
+    public static function resolve(string $morph, int|string $id, ?string $bucket = null): StorageContract
     {
         $class = \Illuminate\Database\Eloquent\Relations\Relation::getMorphedModel($morph);
 

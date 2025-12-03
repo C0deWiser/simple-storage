@@ -51,7 +51,7 @@ interface StorageContract extends \Illuminate\Contracts\Support\Arrayable
     /**
      * Put a single file to a storage with a given name.
      */
-    public function put(mixed $content, string $filename): null|File;
+    public function put(mixed $content, string $filename): ?File;
 
     /**
      * Remove all files.

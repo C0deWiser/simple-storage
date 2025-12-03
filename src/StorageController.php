@@ -14,7 +14,7 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class StorageController
 {
-    public function __invoke(Request $request, string $model, string $id, string $bucket, string $filename = null): Responsable
+    public function __invoke(Request $request, string $model, string $id, string $bucket, ?string $filename = null): Responsable
     {
         if (is_null($filename)) {
             $filename = $bucket;
