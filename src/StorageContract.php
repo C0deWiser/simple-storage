@@ -42,11 +42,18 @@ interface StorageContract extends \Illuminate\Contracts\Support\Arrayable
     public function delete(string|array $keys): static;
 
     /**
-     * Upload a new file(s).
+     * Alias for store method.
      *
      * @param  \Psr\Http\Message\StreamInterface|\Illuminate\Http\File|\Illuminate\Http\UploadedFile|string|resource|array  $content
      */
     public function upload(mixed $content): null|File|FileCollection;
+
+    /**
+     * Upload a new file(s).
+     *
+     * @param  \Psr\Http\Message\StreamInterface|\Illuminate\Http\File|\Illuminate\Http\UploadedFile|string|resource|array  $content
+     */
+    public function store(mixed $content): null|File|FileCollection;
 
     /**
      * Put a single file to a storage with a given name.

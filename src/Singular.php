@@ -9,7 +9,7 @@ class Singular extends Storage implements SingularContract
         return $this->files()->first();
     }
 
-    public function upload($content): null|File|FileCollection
+    public function store($content): null|File|FileCollection
     {
         // Make one!
         $content = is_array($content) ? current($content) : $content;

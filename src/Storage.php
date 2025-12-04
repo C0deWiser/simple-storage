@@ -168,6 +168,11 @@ class Storage implements StorageContract
 
     public function upload($content): null|File|FileCollection
     {
+        return $this->store($content);
+    }
+
+    public function store($content): null|File|FileCollection
+    {
         if (!$content) {
             return null;
         }
