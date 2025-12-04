@@ -13,13 +13,14 @@ class Singular extends Storage implements SingularContract
     {
         // Make one!
         $content = is_array($content) ? current($content) : $content;
+        $content = $content instanceof FileCollection ? $content->first() : $content;
 
         // Flush previous
         if ($content) {
             $this->flush();
         }
 
-        return parent::upload($content);
+        return parent::store($content);
     }
 
     public function put(mixed $content, string $filename): null|File

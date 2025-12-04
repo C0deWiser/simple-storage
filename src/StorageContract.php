@@ -44,14 +44,15 @@ interface StorageContract extends \Illuminate\Contracts\Support\Arrayable
     /**
      * Alias for store method.
      *
-     * @param  \Psr\Http\Message\StreamInterface|\Illuminate\Http\File|\Illuminate\Http\UploadedFile|string|resource|array  $content
+     * @param  \Psr\Http\Message\StreamInterface|\Illuminate\Http\File|\Illuminate\Http\UploadedFile|File|FileCollection|string|resource|array  $content
+     * @deprecated use store()
      */
     public function upload(mixed $content): null|File|FileCollection;
 
     /**
      * Upload a new file(s).
      *
-     * @param  \Psr\Http\Message\StreamInterface|\Illuminate\Http\File|\Illuminate\Http\UploadedFile|string|resource|array  $content
+     * @param  \Psr\Http\Message\StreamInterface|\Illuminate\Http\File|\Illuminate\Http\UploadedFile|File|FileCollection|string|resource|array  $content
      */
     public function store(mixed $content): null|File|FileCollection;
 

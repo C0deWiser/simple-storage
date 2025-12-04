@@ -177,11 +177,16 @@ class Storage implements StorageContract
             return null;
         }
 
-        if (is_array($content)) {
+        // Store array of files one-by-one recursively.
+        if (is_array($content) || $content instanceof FileCollection) {
             return FileCollection::hydrate(
                 $this->disk,
-                array_map(fn($data) => $this->upload($data), $content)
+                array_map(fn($data) => $this->store($data), $content)
             );
+        }
+
+        if ($content instanceof File) {
+            $content = $content->path();
         }
 
         $filename = null;
