@@ -1,6 +1,6 @@
 # Simple lightweight storage
 
-No database, only local filesystem.
+No database, only filesystem.
 
 Every model keeps its files isolated from each over. Path to files 
 formed from the model's morph name and its primary key.

@@ -64,11 +64,7 @@ class Storage implements StorageContract
             ? \Illuminate\Support\Facades\Storage::disk($disk)
             : $disk;
 
-        $this->mount = $this->owner->getMorphClass().DIRECTORY_SEPARATOR.($this->owner->getKey() ?? 0);
-
-        if ($bucket = $this->name()) {
-            $this->mount = $this->mount.DIRECTORY_SEPARATOR.$bucket;
-        }
+        $this->mount = app(MountPoint::class)->handle($this->owner, $this->bucket);
     }
 
     # Mutators
