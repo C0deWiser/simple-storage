@@ -26,7 +26,7 @@ class Storage implements StorageContract
     {
         $class = \Illuminate\Database\Eloquent\Relations\Relation::getMorphedModel($morph);
 
-        if (!$class && !class_exists($class)) {
+        if (! $class && ! class_exists($class)) {
             throw new \InvalidArgumentException(__('Unrecognized class name for ":model"', [
                 'model' => $class
             ]));
@@ -152,7 +152,7 @@ class Storage implements StorageContract
 
             $file = new File($this->disk, $path);
 
-            if (!$this->mute && $this->owner->getKey()) {
+            if (! $this->mute && $this->owner->getKey()) {
                 event(new FileWasStored($file->path(), $this->owner, $this->bucket));
             }
 
@@ -169,7 +169,7 @@ class Storage implements StorageContract
 
     public function store($content): null|File|FileCollection
     {
-        if (!$content) {
+        if (! $content) {
             return null;
         }
 
@@ -203,7 +203,7 @@ class Storage implements StorageContract
 
     public function put(mixed $content, string $filename): null|File
     {
-        if (!$content) {
+        if (! $content) {
             return null;
         }
 
@@ -217,5 +217,15 @@ class Storage implements StorageContract
     public function toArray(): array
     {
         return $this->files()->toArray();
+    }
+
+    public function isEmpty(): bool
+    {
+        return $this->files()->isEmpty();
+    }
+
+    public function isNotEmpty(): bool
+    {
+        return $this->files()->isNotEmpty();
     }
 }

@@ -70,4 +70,8 @@ interface StorageContract extends \Illuminate\Contracts\Support\Arrayable
      * Get all files.
      */
     public function files(): FileCollection;
+
+    public function isEmpty(): bool;
+
+    public function isNotEmpty(): bool;
 }
