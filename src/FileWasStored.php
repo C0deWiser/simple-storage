@@ -18,7 +18,8 @@ class FileWasStored
      */
     public function __construct(
         public string $path,
-        public Model&Attachmentable $owner
+        public Model&Attachmentable $owner,
+        public null|string|\BackedEnum $bucket
     ) {
         //
     }

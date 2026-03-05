@@ -153,7 +153,7 @@ class Storage implements StorageContract
             $file = new File($this->disk, $path);
 
             if (!$this->mute && $this->owner->getKey()) {
-                event(new FileWasStored($file->path(), $this->owner));
+                event(new FileWasStored($file->path(), $this->owner, $this->bucket));
             }
 
             return $file;
