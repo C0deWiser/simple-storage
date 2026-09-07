@@ -2,3 +2,5 @@ composer.lock
 /vendor
 .idea
 /storage
+.phpunit.result.cache
+.DS_Store

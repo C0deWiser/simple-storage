@@ -94,4 +94,69 @@ class StorageTest extends TestCase
         $this->assertEquals(0, $pool->getBucket()->files()->count());
         $this->assertEquals(0, $pool->getBucket('docs')->files()->count());
     }
+
+    public function testStoreAcceptsFileCollection()
+    {
+        $model = new Model();
+
+        $storage = Storage::make($model, $this->fs)->mute();
+
+        $files = $storage->store(new FileCollection([
+            __DIR__ . '/test.png',
+            __DIR__ . '/test2.png'
+        ]));
+
+        $this->assertTrue($files instanceof FileCollection);
+        $this->assertEquals(2, $files->count());
+        $this->assertEquals(2, $storage->files()->count());
+
+        $storage->flush();
+    }
+
+    public function testSingularReplacesPrevious()
+    {
+        $model = new Model();
+
+        $storage = Storage::make($model, $this->fs)->mute()->singular();
+
+        $storage->store(__DIR__ . '/test.png');
+        $storage->store(__DIR__ . '/test2.png');
+
+        $this->assertEquals(1, $storage->files()->count());
+
+        $storage->flush();
+    }
+
+    public function testPutStoresToMount()
+    {
+        $model = new Model();
+
+        $storage = Storage::make($model, $this->fs)->mute();
+
+        $file = $storage->put('file contents', 'file.txt');
+
+        $this->assertInstanceOf(File::class, $file);
+        $this->assertStringStartsWith('model/1/', $file->path);
+        $this->assertTrue($this->fs->fileExists($file->path));
+
+        $storage->flush();
+    }
+
+    public function testDeleteByPath()
+    {
+        $model = new Model();
+
+        $storage = Storage::make($model, $this->fs)->mute();
+
+        $files = $storage->store([
+            __DIR__ . '/test.png',
+            __DIR__ . '/test2.png'
+        ]);
+
+        $storage->delete($files->first()->path);
+
+        $this->assertEquals(1, $storage->files()->count());
+
+        $storage->flush();
+    }
 }

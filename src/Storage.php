@@ -26,7 +26,7 @@ class Storage implements StorageContract
     {
         $class = \Illuminate\Database\Eloquent\Relations\Relation::getMorphedModel($morph);
 
-        if (! $class && ! class_exists($class)) {
+        if (! $class || ! class_exists($class)) {
             throw new \InvalidArgumentException(__('Unrecognized class name for ":model"', [
                 'model' => $class
             ]));
@@ -127,11 +127,12 @@ class Storage implements StorageContract
 
     public function delete(string|array $keys): static
     {
+        // Sort files and delete matching keys with a single listing.
         $keys = is_array($keys) ? $keys : [$keys];
 
-        foreach ($keys as $key) {
-            $this->files()->filterByPath($key)->flush();
-        }
+        $this->files()
+            ->filter(fn(File $file) => in_array($file->path, $keys))
+            ->flush();
 
         return $this;
     }
@@ -175,17 +176,21 @@ class Storage implements StorageContract
 
         // Store array of files one-by-one recursively.
         if (is_array($content) || $content instanceof FileCollection) {
+            $items = is_array($content) ? $content : $content->all();
+
             return FileCollection::hydrate(
                 $this->disk,
-                array_map(fn($data) => $this->store($data), $content)
+                array_map(fn($data) => $this->store($data), $items)
             );
         }
 
+        $filename = null;
+
         if ($content instanceof File) {
+            // Preserve the original filename when re-storing a File.
+            $filename = $content->filename();
             $content = $content->path();
         }
-
-        $filename = null;
 
         if (is_string($content) && file_exists($content)) {
             $filename = pathinfo($content)['basename'];
@@ -207,7 +212,7 @@ class Storage implements StorageContract
             return null;
         }
 
-        $filename = $this->mount.DIRECTORY_SEPARATOR.$filename;
+        $filename = $this->mount.'/'.$filename;
 
         $this->disk->put($filename, $content);
 

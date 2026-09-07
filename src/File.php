@@ -124,13 +124,13 @@ class File implements \Illuminate\Contracts\Support\Arrayable, \Illuminate\Contr
 
     public function mime(): ?string
     {
-        if (($mime = $this->mimeType()) &&
-            ($mime = explode('/', $mime)) &&
-            isset($mime[0])) {
-            return $mime[0];
+        $mime = $this->mimeType();
+
+        if (! $mime) {
+            return null;
         }
 
-        return $mime;
+        return explode('/', $mime)[0] ?? null;
     }
 
     /**
@@ -213,10 +213,13 @@ class File implements \Illuminate\Contracts\Support\Arrayable, \Illuminate\Contr
     public function toResponse($request): \Symfony\Component\HttpFoundation\Response
     {
         $response = $this->response()
-            ->setEtag($this->checksum())
             ->setLastModified(\Illuminate\Support\Carbon::createFromTimestamp($this->lastModified()));
 
         // Check and set response status...
+        if ($checksum = $this->checksum()) {
+            $response->setEtag($checksum);
+        }
+
         $response->isNotModified($request);
 
         return $response;

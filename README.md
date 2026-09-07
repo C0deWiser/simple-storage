@@ -22,7 +22,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Post extends Model implements Attachmentable
 {
-    public function storage(string|\BackedEnum $bucket = null): StorageContract
+    public function storage(null|string|\BackedEnum $bucket = null): StorageContract
     {
         return Storage::make($this, bucket: $bucket);
     }
@@ -31,8 +31,8 @@ class Post extends Model implements Attachmentable
 
 ### Uploading files
 
-You may add files from `UploadedFile`, from a local path or remote url.
-You may upload multiple files at once.
+You may add files from `UploadedFile`, a local path or, if `allow_url_fopen`
+is enabled, from a remote url. You may upload multiple files at once.
 
 ```php
 use Illuminate\Http\Request;
@@ -80,7 +80,7 @@ class Controller {
 To remove all files call `flush` method on `Storage`:
 
 ```php
-$files = $post->storage()->flush();
+$post->storage()->flush();
 ```
 
 ### List files
@@ -137,7 +137,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Post extends Model implements Attachmentable
 {
-    public function storage(string|\BackedEnum $bucket = null): StorageContract|Singular
+    public function storage(null|string|\BackedEnum $bucket = null): StorageContract
     {
         return Storage::make($this, disk: 'public', bucket: $bucket)->singular();
     }
@@ -169,7 +169,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Post extends Model implements Attachmentable
 {
-    public function storage(string|\BackedEnum $bucket = null): StorageContract|Singular
+    public function storage(null|string|\BackedEnum $bucket = null): StorageContract
     {
         return match ($bucket)
             
@@ -206,7 +206,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Post extends Model implements Attachmentable
 {
-    public function storage(string|\BackedEnum $bucket = null): StorageContract|Singular
+    public function storage(null|string|\BackedEnum $bucket = null): StorageContract
     {
         return match ($bucket)
         
@@ -251,7 +251,7 @@ class Post extends Model implements Attachmentable
             ->addBucket(Storage::make($this, bucket: 'docs'));        
     }
 
-    public function storage(string|\BackedEnum $bucket = null): StorageContract|Singular
+    public function storage(null|string|\BackedEnum $bucket = null): StorageContract
     {
         return $this->pool()->getBucket($bucket);
     }
@@ -374,4 +374,9 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('private/{model}/{id}/{bucket}/{filename?}', StorageController::class);
 ```
+
+`StorageController` resolves the storage, authorizes the owner model with the
+`view` policy, and returns the matched file as a streamed response. The current
+`StorageController` implementation also turns resolution failures into HTTP
+`BadRequest` exceptions and a missing file into `NotFound`:
 

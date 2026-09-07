@@ -9,5 +9,5 @@ interface Attachmentable
      *
      * @return StorageContract
      */
-    public function storage($bucket = null): StorageContract;
+    public function storage(null|string|\BackedEnum $bucket = null): StorageContract;
 }
