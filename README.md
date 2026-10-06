@@ -1,18 +1,22 @@
 # Simple lightweight storage
 
-No database, only filesystem.
+No database, only the filesystem.
 
-Every model keeps its files isolated from each over. Path to files 
-formed from the model's morph name and its primary key.
+Every model keeps its files isolated from one another. The path to a file is
+built from the model's `morph name` and its `primary key`.
 
-> Remember to `enforceMorphMap` in `AppServiceProvider`!
+> Remember to call `enforceMorphMap` in `AppServiceProvider`!
 
-## Define storage 
+```
+composer require codewiser/simple-files
+```
 
-Implement `Attachmentable` contract on `Model`.
+## Define storage
 
-In the example below the model will keep files on default disk at `post/{id}`
-path.
+Implement the `Attachmentable` contract on your model.
+
+In the example below the model keeps its files on the `public` disk, under the
+`post/{id}` path.
 
 ```php
 use Codewiser\Storage\Attachmentable;
@@ -22,17 +26,21 @@ use Illuminate\Database\Eloquent\Model;
 
 class Post extends Model implements Attachmentable
 {
-    public function storage(null|string|\BackedEnum $bucket = null): StorageContract
+    public function storage(): StorageContract
     {
-        return Storage::make($this, bucket: $bucket);
+        return new Storage($this, disk: 'public');
     }
 }
 ```
 
-### Uploading files
+The `disk` argument is optional and defaults to the `filesystems.default`
+config value.
 
-You may add files from `UploadedFile`, a local path or, if `allow_url_fopen`
-is enabled, from a remote url. You may upload multiple files at once.
+## Uploading files
+
+You may store an `UploadedFile`, a path to a local file, an instance of `File`
+kept on any disk, or — when `allow_url_fopen` is enabled — a remote URL.
+Several files may be uploaded at once.
 
 ```php
 use Illuminate\Http\Request;
@@ -40,52 +48,54 @@ use Illuminate\Http\Request;
 class Controller {
     public function attach(Request $request, Post $post) {
 
-        return $post->storage()
-            ->upload($request->allFiles())
-            ->toArray(); 
+        return $post->storage()->store($request->allFiles()); 
     }
 }
 ```
 
-```json
-[{
-    "path": "post/1/test.png",
-    "url": "/storage/post/1/test.png",
-    "name": "test.png",
-    "size": 6434,
-    "hash": "d41d8cd98f00b204e9800998ecf8427e",
-    "mime_type": "image/png",
-    "last_modified": "2025-02-18T12:29:46+00:00"
-}]
+The owner must be saved first: storing files to an unsaved model throws a
+`LogicException`, because such a model has no mount point of its own yet.
+
+### Listening to uploads
+
+Every stored file dispatches a `FileWasStored` event:
+
+```php
+use Codewiser\Storage\FileWasStored;
+
+Event::listen(function (FileWasStored $event) {
+    $event->path;    // Full path of the file, as the disk resolves it.
+    $event->owner;   // The model the file belongs to.
+    $event->bucket;  // null, a string or a backed enum case.
+});
 ```
 
-### Removing files
+## Removing files
 
-File `path` attribute is a relative path to a disk, e.g. `post/1/test.png`. 
-Use `path` attribute to delete a file. You may delete multiple files at once.
+The `path` attribute of a file is its relative path on the disk, for example
+`post/1/test.png`. Use it to delete files; you may delete several at once.
 
 ```php
 use Illuminate\Http\Request;
 
 class Controller {
     public function detach(Request $request, Post $post) {
-        $post->storage()
-            ->delete($request->input('unlink'));
-            
-        return response()->noContent(); 
+        
+        $post->storage()->delete($request->input('unlink'));
     }
 }
 ```
 
-To remove all files call `flush` method on `Storage`:
+To remove all files, call `flush()` on the storage. When the mount point gets
+empty, it is dropped too:
 
 ```php
 $post->storage()->flush();
 ```
 
-### List files
+## List files
 
-To get collection with all files call `files` method on `Storage`:
+To get a collection with all files, call `files()` on the storage:
 
 ```php
 $files = $post->storage()->files();
@@ -93,7 +103,7 @@ $files = $post->storage()->files();
 return $files->toArray();
 ```
 
-`Storage` object is `Arrayable` too. It returns the same:
+`Storage` is `Arrayable` too and returns the same thing:
 
 ```php
 $post->storage()->toArray();
@@ -101,12 +111,12 @@ $post->storage()->toArray();
 $post->storage()->files()->toArray();
 ```
 
-### File object
+## File serialization
 
-File object has the same methods as Laravel Storage Facade: `exists`, `size`,
-`lastModified`, `delete`, `checksum`, `url` etc.
+The `File` object mirrors the Laravel Storage facade: `exists`, `size`,
+`lastModified`, `delete`, `checksum`, `url` and so on.
 
-Every stored file represented with such an array:
+Every stored file is represented by such an array:
 
 ```json
 {
@@ -120,13 +130,12 @@ Every stored file represented with such an array:
 }
 ```
 
-`File` object implements `Responsable` and  `Attachable`, so you may use it as 
-`Response` and in `Notification` or `Mailable`.
+`File` implements `Responsable` and `Attachable`, so you may use it as a
+`Response` and in a `Notification` or a `Mailable`.
 
-## Singular Storage
+## Singular storage
 
-Sometimes we need the model to have only one file. We may create such a 
-storage:
+Sometimes a model needs to have only one file. We may create such a storage:
 
 ```php
 use Codewiser\Storage\Attachmentable;
@@ -137,17 +146,17 @@ use Illuminate\Database\Eloquent\Model;
 
 class Post extends Model implements Attachmentable
 {
-    public function storage(null|string|\BackedEnum $bucket = null): StorageContract
+    public function storage(): StorageContract
     {
-        return Storage::make($this, disk: 'public', bucket: $bucket)->singular();
+        return Storage::make($this)->singular();
     }
 }
 ```
 
-When you upload the next file to a storage, all previous files will be removed.
+When you upload the next file to this storage, all previous files are removed.
 
-Singular storage has only one file, so `files` collection will contain only one 
-element maximum. You may use `file` method instead. 
+A singular storage holds at most one element in its `files` collection, so you
+may prefer the `file()` method:
 
 ```php
 $post->storage()->toArray();
@@ -155,10 +164,10 @@ $post->storage()->toArray();
 $post->storage()->file()->toArray();
 ```
 
-## Storage Pool
+## Storage pool
 
-The model may have few storages at the same time. Storages must have 
-unique names (aka buckets).
+A model may have several storages at the same time. Storages must have unique
+names, also known as buckets. A bucket keeps its files in a subdirectory.
 
 ```php
 use Codewiser\Storage\Attachmentable;
@@ -169,16 +178,19 @@ use Illuminate\Database\Eloquent\Model;
 
 class Post extends Model implements Attachmentable
 {
-    public function storage(null|string|\BackedEnum $bucket = null): StorageContract
+    public function storage($bucket = null): StorageContract
     {
         return match ($bucket)
             
             // One cover
-            'cover' => Storage::make($this, bucket: $bucket)
+            'cover' => Storage::make($this, disk: 'private', bucket: $bucket)
                 ->singular(),
                 
             // Many docs
-            'docs'  => Storage::make($this, bucket: $bucket),
+            'docs'  => Storage::make($this, disk: 'private', bucket: $bucket),
+            
+            // Default bucket
+            null => Storage::make($this),
             
             default => throw new \InvalidArgumentException("Bucket is not supported"),
         };
@@ -186,53 +198,55 @@ class Post extends Model implements Attachmentable
 }
 ```
 
-Then we may get the exact bucket:
+Then we may ask for an exact bucket:
 
 ```php
 $docs = $post->storage('docs')->files();
 $cover = $post->storage('cover')->file();
+$other_files = $post->storage()->files();
 ```
 
-### Default storage
+## Prune files with the owner
 
-It is allowed to have one default storage in a pool:
+Register `AttachmentableObserver` on the owner model to unlink its files when
+the owner is destroyed:
 
 ```php
-use Codewiser\Storage\Attachmentable;
-use Codewiser\Storage\Storage;
-use Codewiser\Storage\Singular;
-use Codewiser\Storage\StorageContract;
-use Illuminate\Database\Eloquent\Model;
+use Codewiser\Storage\AttachmentableObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 
+#[ObservedBy(AttachmentableObserver::class)]
 class Post extends Model implements Attachmentable
 {
-    public function storage(null|string|\BackedEnum $bucket = null): StorageContract
+    // ...
+}
+```
+
+Files are unlinked on the `deleted` event. An owner with the `SoftDeletes`
+trait keeps its files until `forceDelete` is called.
+
+The observer flushes the default bucket and every bucket declared as a backed
+enum case in the `storage` method argument:
+
+```php
+class Post extends Model implements Attachmentable
+{
+    public function storage(Bucket $bucket = null): StorageContract
     {
-        return match ($bucket)
-        
-            // Named bucket
-            'docs'  => Storage::make($this, bucket: $bucket),
-            
-            // Default bucket
-            null => Storage::make($this)->singular(),
-            
-            default => throw new \InvalidArgumentException("Bucket is not supported"),
-        };
+        return Storage::make($this, bucket: $bucket);
     }
 }
 ```
 
-Call `storage` without bucket name to get the default one.
+The observer reflects that argument, resolves every `Bucket` case, and flushes
+`post/1`, `post/1/cover`, `post/1/docs` and so on.
 
-```php
-$cover = $post->storage()->file();
-$docs = $post->storage('docs')->files();
-```
+If buckets are defined as plain strings, the observer cannot enumerate them.
 
-### Pool response
+## Pool response
 
-You may add a method to a model, that will return `Pool` object with all 
-buckets defined:
+You may add a method to a model that returns a `Pool` object with all buckets
+defined:
 
 ```php
 use Codewiser\Storage\Attachmentable;
@@ -244,21 +258,21 @@ use Illuminate\Database\Eloquent\Model;
 
 class Post extends Model implements Attachmentable
 {
-    public function pool(): Pool
+    public function storagePool(): Pool
     {
         return Pool::make()
             ->addBucket(Storage::make($this)->singular())
             ->addBucket(Storage::make($this, bucket: 'docs'));        
     }
 
-    public function storage(null|string|\BackedEnum $bucket = null): StorageContract
+    public function storage($bucket = null): StorageContract
     {
-        return $this->pool()->getBucket($bucket);
+        return $this->storagePool()->getBucket($bucket);
     }
 }
 ```
 
-Then you may use this method in api resource:
+Then you may use this method in an API resource:
 
 ```php
 use Illuminate\Http\Request;
@@ -271,16 +285,16 @@ class PostResource extends JsonResource
         return [
             ...parent::toArray($request),
             
-            'files' => $this->pool()->toArray()
+            'files' => $this->storagePool()->toArray()
         ];
     }
 }
 ```
 
-Pool `toArray` method will return an array with every bucket and its file(s).
-Singular storage provides `file` attribute, that may be `null` 
-if no file were uploaded. Base storage provides `files` array, that may be 
-empty.
+The `Pool::toArray()` method returns an array with every bucket and its file
+or files. A singular storage provides a `file` entry, which is an empty array
+when no file has been uploaded; a base storage provides a `files` array, which
+may be empty.
 
 ```json
 [
@@ -315,9 +329,9 @@ empty.
 
 ## Downloading files
 
-The file is directly accessible only then published in public local 
-filesystem. In other cases — private or cloud filesystem — application needs 
-a controller to make files accessible to the users.
+A file is directly accessible only when it is published on a public local
+filesystem. In every other case — a private or a cloud filesystem — the
+application needs a controller that serves files to its users.
 
 Let's say we have such a private disk in `config/filesystems.php`:
 
@@ -332,41 +346,11 @@ Let's say we have such a private disk in `config/filesystems.php`:
 ],
 ```
 
-If so, file url would be about `private/post/1/test.png` (for default bucket)
-or `private/post/1/bucket/test.png` (for named bucket).
+A file on this disk is addressed as `private/post/1/test.png` for the default
+bucket and as `private/post/1/docs/test.png` for a named bucket.
 
-We suggest to use a controller `\Codewiser\Storage\StorageController`, that 
-is looks so:
-
-```php
-use Codewiser\Storage\File;
-use Codewiser\Storage\Storage;
-use Illuminate\Contracts\Support\Responsable;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Gate;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
-
-class StorageController
-{
-    public function __invoke(Request $request, string $model, string $id, string $bucket, string $filename = null): Responsable
-    {
-        if (is_null($filename)) {
-            $filename = $bucket;
-            $bucket = null;
-        }
-
-        $storage = Storage::resolve($model, $id, $bucket);
-
-        Gate::authorize('view', $storage->owner());
-
-        return $storage->files()->sole(
-            fn(File $file) => $file->filename() == $filename
-        );
-    }
-}
-```
-
-All you need is to declare a route:
+The package ships an invokable `StorageController` for this purpose. All you
+need is to declare a route:
 
 ```php
 use Codewiser\Storage\StorageController;
@@ -375,8 +359,17 @@ use Illuminate\Support\Facades\Route;
 Route::get('private/{model}/{id}/{bucket}/{filename?}', StorageController::class);
 ```
 
-`StorageController` resolves the storage, authorizes the owner model with the
-`view` policy, and returns the matched file as a streamed response. The current
-`StorageController` implementation also turns resolution failures into HTTP
-`BadRequest` exceptions and a missing file into `NotFound`:
+When a file belongs to the default bucket, the `{bucket}` segment carries the
+filename, and the controller shifts the parameters for you.
 
+The `{model}` segment must be a registered morph alias, so `enforceMorphMap()`
+is required here as well: an unknown alias becomes a `BadRequest`.
+
+The `{bucket}` segment is matched against the argument of your `storage()`
+method: a plain string is handed over as it is, while an enum-typed one is
+resolved to its case.
+
+The controller resolves the storage from the route parameters, authorizes the
+owner model with the `view` policy, and returns the matched file as a streamed
+response. Resolution failures are turned into HTTP `BadRequest` exceptions, and
+a missing file becomes `NotFound`.

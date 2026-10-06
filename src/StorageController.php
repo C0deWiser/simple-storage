@@ -30,7 +30,7 @@ class StorageController
         Gate::authorize('view', $storage->owner());
 
         try {
-            return $storage->files()->sole(fn(File $file) => $file->filename() == $filename);
+            return $storage->files()->sole(fn(File $file) => $file->filename() === $filename);
         } catch (ItemNotFoundException $exception) {
             throw new NotFoundHttpException($exception->getMessage());
         } catch (MultipleItemsFoundException $exception) {

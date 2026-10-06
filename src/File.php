@@ -122,7 +122,24 @@ class File implements \Illuminate\Contracts\Support\Arrayable, \Illuminate\Contr
         return $this->disk->mimeType($this->path);
     }
 
+    /**
+     * Get the top-level type of the file, for example `image`.
+     *
+     * Use `mimeType()` for the full type, for example `image/png`.
+     *
+     * @deprecated use type()
+     */
     public function mime(): ?string
+    {
+        return $this->type();
+    }
+
+    /**
+     * Get the top-level type of the file, for example `image`.
+     *
+     * Use `mimeType()` for the full type, for example `image/png`.
+     */
+    public function type(): ?string
     {
         $mime = $this->mimeType();
 

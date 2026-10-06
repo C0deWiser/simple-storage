@@ -30,7 +30,7 @@ class FileCollection extends \Illuminate\Support\Collection
     public function filterByPath(string $path): static
     {
         return $this->filter(
-            fn(File $file) => $file->path == $path
+            fn(File $file) => $file->path === $path
         );
     }
 
@@ -40,7 +40,7 @@ class FileCollection extends \Illuminate\Support\Collection
     public function one(string $filename): ?File
     {
         return $this->first(
-            fn(File $file) => $file->filename() == $filename
+            fn(File $file) => $file->filename() === $filename
         );
     }
 
@@ -52,7 +52,9 @@ class FileCollection extends \Illuminate\Support\Collection
                     return 0;
                 }
                 return ($a->lastModified() > $b->lastModified()) ? -1 : 1;
-            });
+            })
+            // Reindex, so a reordered list still serializes as a JSON array.
+            ->values();
     }
 
     public function oldest(): static
@@ -63,7 +65,9 @@ class FileCollection extends \Illuminate\Support\Collection
                     return 0;
                 }
                 return ($a->lastModified() < $b->lastModified()) ? -1 : 1;
-            });
+            })
+            // Reindex, so a reordered list still serializes as a JSON array.
+            ->values();
     }
 
     /**
