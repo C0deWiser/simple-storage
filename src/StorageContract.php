@@ -44,7 +44,8 @@ interface StorageContract extends \Illuminate\Contracts\Support\Arrayable
     /**
      * Alias for store method.
      *
-     * @param  \Psr\Http\Message\StreamInterface|\Illuminate\Http\File|\Illuminate\Http\UploadedFile|File|FileCollection|string|resource|array  $content
+     * @param  File|FileCollection|\Symfony\Component\HttpFoundation\File\UploadedFile|array|string  $content  A stored file, an upload, a local path, a remote URL, or a list of them.
+     *
      * @deprecated use store()
      */
     public function upload(mixed $content): null|File|FileCollection;
@@ -52,12 +53,17 @@ interface StorageContract extends \Illuminate\Contracts\Support\Arrayable
     /**
      * Upload a new file(s).
      *
-     * @param  \Psr\Http\Message\StreamInterface|\Illuminate\Http\File|\Illuminate\Http\UploadedFile|File|FileCollection|string|resource|array  $content
+     * @param  File|FileCollection|\Symfony\Component\HttpFoundation\File\UploadedFile|array|string  $content  A stored file, an upload, a local path, a remote URL, or a list of them.
+     *
+     * @throws \InvalidArgumentException  When the content cannot be stored.
+     * @throws \LogicException  When the owner model is not persisted yet.
      */
     public function store(mixed $content): null|File|FileCollection;
 
     /**
      * Put a single file to a storage with a given name.
+     *
+     * @throws \LogicException  When the owner model is not persisted yet.
      */
     public function put(mixed $content, string $filename): ?File;
 

@@ -25,7 +25,12 @@ class Pool implements Arrayable
         return $this;
     }
 
-    public function getBucket(string|\BackedEnum $name = null): StorageContract
+    /**
+     * @param null|string|\BackedEnum $name
+     *
+     * @return StorageContract
+     */
+    public function getBucket($name = null): StorageContract
     {
         if ($name instanceof \BackedEnum) {
             $name = $name->value;
@@ -45,7 +50,10 @@ class Pool implements Arrayable
     /**
      * Get an array of buckets with their files.
      *
-     * @return array<int, array{bucket:null|string, file:null|array, files:null|array}>
+     * A singular bucket provides a `file` entry, any other bucket provides a
+     * `files` entry.
+     *
+     * @return array<int, array{bucket: null|string, file?: array, files?: array}>
      */
     public function toArray(): array
     {
@@ -53,7 +61,7 @@ class Pool implements Arrayable
             ->map(
                 fn(StorageContract $bucket) => [
                     'bucket'      => $bucket->name(),
-                    $bucket instanceof Singular ? 'file' : 'files' => $bucket->toArray()
+                    $bucket instanceof SingularContract ? 'file' : 'files' => $bucket->toArray()
                 ]
             )
             ->values()

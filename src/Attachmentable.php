@@ -2,12 +2,13 @@
 
 namespace Codewiser\Storage;
 
+/**
+ * Model with file storage.
+ */
 interface Attachmentable
 {
     /**
-     * @param  null|string|\BackedEnum  $bucket
-     *
-     * @return StorageContract
+     * Get the owner's storage.
      */
-    public function storage(null|string|\BackedEnum $bucket = null): StorageContract;
+    public function storage(): StorageContract;
 }

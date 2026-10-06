@@ -2,19 +2,20 @@
 
 namespace Codewiser\Storage;
 
-use Illuminate\Broadcasting\Channel;
-use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
 class FileWasStored
 {
-    use Dispatchable, InteractsWithSockets, SerializesModels;
+    use Dispatchable, SerializesModels;
 
     /**
      * Create a new event instance.
+     *
+     * @param  string  $path  Full path of the stored file, as the disk resolves it.
+     * @param  Model&Attachmentable  $owner  Owner of the storage the file was stored to.
+     * @param  null|string|\BackedEnum  $bucket  Bucket the file was stored to.
      */
     public function __construct(
         public string $path,
@@ -22,17 +23,5 @@ class FileWasStored
         public null|string|\BackedEnum $bucket
     ) {
         //
-    }
-
-    /**
-     * Get the channels the event should broadcast on.
-     *
-     * @return array<int, Channel>
-     */
-    public function broadcastOn(): array
-    {
-        return [
-            new PrivateChannel('channel-name'),
-        ];
     }
 }
